@@ -1,0 +1,3623 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decorarte — Logística</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg:#F5F2EE;--surface:#FFF;--surface2:#F0EDE8;--border:#E2DDD6;--border-s:#C8C0B4;
+    --text:#1A1714;--text2:#6B6560;--text3:#A09890;
+    --green:#2D5016;--green-l:#EAF0E3;
+    --amber:#8B5E00;--amber-l:#FBF3E0;
+    --red:#8B1A1A;--red-l:#FAEAEA;
+    --blue:#1A3A5C;--blue-l:#E3EBF4;
+    --purple:#4A2878;--purple-l:#F0EAF8;
+    --r:10px;--rs:6px;
+    --sh:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+    --sh-lg:0 8px 32px rgba(0,0,0,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
+  .app{display:flex;height:100vh;overflow:hidden;}
+
+  /* NAV */
+  .nav{width:220px;flex-shrink:0;background:var(--text);color:#fff;display:flex;flex-direction:column;}
+  .nav-logo{padding:28px 24px 20px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .nav-logo .wm{font-family:'DM Serif Display',serif;font-size:22px;letter-spacing:-.5px;color:#fff;}
+  .nav-logo .sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+  .nav-items{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:2px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--rs);cursor:pointer;color:rgba(255,255,255,.55);font-size:13px;border:none;background:none;width:100%;text-align:left;transition:all .15s;font-family:'DM Sans',sans-serif;}
+  .nav-item:hover{color:#fff;background:rgba(255,255,255,.08);}
+  .nav-item.active{color:#fff;background:rgba(255,255,255,.12);font-weight:500;}
+  .nav-item .icon{width:16px;text-align:center;font-size:14px;}
+  .nb{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:500;padding:2px 6px;border-radius:20px;min-width:18px;text-align:center;}
+  .nb.g{background:var(--green);}
+  .nb.a{background:var(--amber);}
+  .nav-sec{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.25);padding:16px 12px 6px;}
+  .nav-footer{padding:16px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.3);}
+  .nav-footer .d{color:rgba(255,255,255,.5);font-weight:500;}
+
+  /* MAIN */
+  .main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
+  .topbar h1{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;flex:1;}
+  .content{flex:1;overflow-y:auto;padding:24px 28px;}
+  .panel{display:none;}
+  .panel.active{display:block;animation:fadeIn .2s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+  /* BUTTONS */
+  .btn{padding:7px 14px;border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+  .btn-primary{background:var(--text);color:#fff;}
+  .btn-primary:hover{background:#333;}
+  .btn-primary:disabled{background:#999;cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--text2);border-color:var(--border);}
+  .btn-ghost:hover{background:var(--surface2);color:var(--text);}
+  .btn-success{background:var(--green);color:#fff;border-color:var(--green);}
+  .btn-success:hover{background:#1f3a0e;}
+
+  /* METRICS */
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
+  .mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);}
+  .mc.alert{border-color:#E8C8C8;background:var(--red-l);}
+  .mc.ok{border-color:#C8DDB8;background:var(--green-l);}
+  .mc.warn{border-color:#E8CC80;background:var(--amber-l);}
+  .mc-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  .mc-val{font-family:'DM Serif Display',serif;font-size:32px;line-height:1;}
+  .mc.alert .mc-val{color:var(--red);}
+  .mc.ok .mc-val{color:var(--green);}
+  .mc.warn .mc-val{color:var(--amber);}
+  .mc-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+
+  /* ALERTS */
+  .alert-banner{background:var(--amber-l);border:1px solid #E8CC80;border-radius:var(--r);padding:12px 16px;font-size:13px;color:var(--amber);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+  .alert-banner.danger{background:var(--red-l);border-color:#E8A0A0;color:var(--red);}
+
+  /* TABLE CARD */
+  .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+  .table-toolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .si{padding:6px 12px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);width:200px;outline:none;}
+  .si:focus{border-color:var(--border-s);background:var(--surface);}
+  .fs{padding:6px 10px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);outline:none;cursor:pointer;}
+  table{width:100%;border-collapse:collapse;}
+  thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;background:var(--surface2);border-bottom:1px solid var(--border);}
+  tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--surface2);}
+  tbody tr.blocked-row{background:#fdf0f0;}
+  tbody tr.guia-row{background:#fffbf0;}
+  td{padding:11px 14px;font-size:13px;color:var(--text);vertical-align:middle;}
+  td.muted{color:var(--text2);}
+  td.mono{font-size:11px;color:var(--text3);font-weight:500;}
+  .table-check{width:38px;text-align:center;}
+  .check-input{width:16px;height:16px;cursor:pointer;accent-color:var(--text);}
+  .selection-count{font-size:12px;color:var(--text3);margin-left:auto;}
+
+  /* BADGES */
+  .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap;}
+  .b-green{background:var(--green-l);color:var(--green);}
+  .b-amber{background:var(--amber-l);color:var(--amber);}
+  .b-red{background:var(--red-l);color:var(--red);}
+  .b-blue{background:var(--blue-l);color:var(--blue);}
+  .b-purple{background:var(--purple-l);color:var(--purple);}
+  .b-gray{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+
+  /* FLOW STEPS (dashboard) */
+  .flow-steps{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:16px;}
+  .fs-step{flex:1;padding:10px 8px;text-align:center;border-right:1px solid var(--border);cursor:pointer;transition:background .15s;position:relative;}
+  .fs-step:last-child{border-right:none;}
+  .fs-step:hover{background:var(--surface2);}
+  .fs-step .fsn{font-family:'DM Serif Display',serif;font-size:20px;line-height:1;}
+  .fs-step .fsl{font-size:9px;color:var(--text3);margin-top:2px;letter-spacing:.3px;}
+  .fs-step .fsc{position:absolute;top:6px;right:6px;font-size:9px;background:var(--red);color:#fff;border-radius:20px;padding:1px 5px;}
+
+  /* DETAIL PANEL */
+  .overlay{position:fixed;inset:0;background:rgba(26,23,20,.4);z-index:100;display:none;backdrop-filter:blur(2px);}
+  .overlay.open{display:block;}
+  .detail{position:fixed;top:0;right:0;bottom:0;width:500px;background:var(--surface);box-shadow:var(--sh-lg);z-index:101;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
+  .detail.open{transform:translateX(0);}
+  .detail-hdr{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;}
+  .detail-close{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text3);font-size:22px;line-height:1;flex-shrink:0;}
+  .detail-close:hover{color:var(--text);}
+  .detail-title{font-family:'DM Serif Display',serif;font-size:20px;line-height:1.2;margin-bottom:4px;}
+  .detail-ref{font-size:12px;color:var(--text3);}
+  .detail-body{flex:1;overflow-y:auto;padding:20px 24px;}
+  .detail-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--surface2);}
+  .dsec{margin-bottom:20px;}
+  .dsec-title{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+  .drow{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--border);}
+  .drow:last-child{border-bottom:none;}
+  .dkey{font-size:12px;color:var(--text2);}
+  .dval{font-size:13px;color:var(--text);text-align:right;max-width:60%;}
+
+  /* STATUS FLOW IN DETAIL */
+  .sf{display:flex;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;font-size:10px;margin-bottom:16px;}
+  .sf-s{flex:1;padding:7px 4px;text-align:center;background:var(--surface2);color:var(--text3);border-right:1px solid var(--border);}
+  .sf-s:last-child{border-right:none;}
+  .sf-s.done{background:var(--green-l);color:var(--green);}
+  .sf-s.current{background:var(--green);color:#fff;font-weight:500;}
+  .sf-s.blocked-s{background:var(--amber-l);color:var(--amber);}
+
+  /* GUIA INFO BOX */
+  .guia-info{background:var(--amber-l);border:1px solid #E8CC80;border-radius:var(--rs);padding:12px 14px;font-size:12px;color:var(--amber);margin-bottom:14px;line-height:1.6;}
+  .guia-info strong{display:block;margin-bottom:6px;font-size:13px;}
+  .guia-info .missing{color:var(--red);font-style:italic;}
+
+  /* ROUTE CARDS */
+  .route-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .rc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+  .rc-hdr{padding:14px 18px;background:var(--text);color:#fff;display:flex;align-items:center;gap:10px;}
+  .rc-hdr h3{font-family:'DM Serif Display',serif;font-size:16px;font-weight:400;}
+  .rc-hdr .rhs{font-size:11px;opacity:.5;margin-left:auto;}
+  .rs{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;}
+  .rs:last-child{border-bottom:none;}
+  .rs-dot{width:24px;height:24px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--text2);flex-shrink:0;margin-top:1px;}
+  .rs-dot.forn{background:var(--blue-l);border-color:#B0C8E0;color:var(--blue);}
+  .rs-dot.ok{background:var(--green-l);border-color:#B8D4A0;color:var(--green);}
+  .rs-dot.blocked{background:var(--red-l);border-color:#E8A0A0;color:var(--red);}
+  .rs-info{flex:1;}
+  .rs-name{font-size:13px;font-weight:500;}
+  .rs-addr{font-size:11px;color:var(--text3);margin-top:2px;}
+  .rs-tags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;}
+  .route-toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .route-view-switch{display:flex;gap:6px;flex-wrap:wrap;}
+  .zone-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;}
+  .zc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+  .zc-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface2);}
+  .zc-hdr h3{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;line-height:1.1;}
+  .zc-meta{margin-left:auto;font-size:12px;color:var(--text2);}
+  .zc-body{padding:14px 18px;}
+  .zone-metrics{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .zone-list{display:flex;flex-direction:column;gap:10px;}
+  .zone-item{padding:12px;border:1px solid var(--border);border-radius:var(--rs);background:var(--surface);}
+  .zone-item-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+  .zone-item-name{font-size:13px;font-weight:500;}
+  .zone-item-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+  .zone-item-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(26,23,20,.5);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh-lg);width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;}
+  .modal-hdr{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .modal-hdr h2{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;}
+  .modal-body{padding:20px 24px;}
+  .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--surface2);}
+
+  /* FORM */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .fg{display:flex;flex-direction:column;gap:5px;}
+  .fg.full{grid-column:1/-1;}
+  .flabel{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;}
+  .finput,.fselect,.ftextarea{padding:8px 12px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);outline:none;width:100%;transition:border-color .15s;}
+  .finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--border-s);background:var(--surface);}
+  .ftextarea{resize:vertical;min-height:72px;}
+
+  /* KANBAN */
+  .kanban-wrap{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;margin-top:4px;}
+  .kcol{flex-shrink:0;width:240px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+  .kcol-hdr{padding:10px 14px;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);}
+  .kcol-cnt{font-size:11px;background:var(--border);border-radius:20px;padding:1px 7px;color:var(--text2);}
+  .kcol-cards{padding:8px;display:flex;flex-direction:column;gap:8px;min-height:60px;}
+  .kcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;cursor:pointer;transition:all .15s;box-shadow:var(--sh);}
+  .kcard:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);transform:translateY(-1px);}
+  .kcard.kcard-warn{border-left:3px solid var(--amber);}
+  .kc-ref{font-size:10px;color:var(--text3);font-weight:500;margin-bottom:4px;}
+  .kc-name{font-size:13px;font-weight:500;margin-bottom:6px;}
+  .kc-meta{display:flex;gap:5px;flex-wrap:wrap;}
+
+  /* CALENDÁRIO */
+  .calendar-shell{display:flex;flex-direction:column;gap:16px;}
+  .calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);}
+  .calendar-title-wrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .calendar-month-title{font-family:'DM Serif Display',serif;font-size:24px;line-height:1;}
+  .calendar-nav{display:flex;align-items:center;gap:8px;}
+  .calendar-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);}
+  .calendar-grid-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+  .calendar-weekdays,.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));}
+  .calendar-weekdays{background:var(--surface2);border-bottom:1px solid var(--border);}
+  .calendar-weekdays div{padding:10px 12px;font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;}
+  .calendar-day{min-height:132px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:10px;position:relative;cursor:pointer;transition:background .12s;display:flex;flex-direction:column;gap:8px;}
+  .calendar-day:nth-child(7n){border-right:none;}
+  .calendar-day:hover{background:var(--surface2);}
+  .calendar-day.other-month{background:#faf8f5;color:var(--text3);}
+  .calendar-day.today{box-shadow:inset 0 0 0 2px var(--text);}
+  .calendar-day.blocked{background:#fdf3f3;}
+  .calendar-day-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .calendar-day-num{font-size:12px;font-weight:600;}
+  .calendar-load{font-size:10px;color:var(--text3);}
+  .calendar-pills{display:flex;flex-wrap:wrap;gap:5px;}
+  .calendar-pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;line-height:1.2;white-space:nowrap;}
+  .calendar-note-list{display:flex;flex-direction:column;gap:4px;margin-top:auto;}
+  .calendar-note{font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .c-purple{background:var(--purple-l);color:var(--purple);}
+  .c-red{background:var(--red-l);color:var(--red);}
+  .c-green{background:var(--green-l);color:var(--green);}
+  .c-blue{background:var(--blue-l);color:var(--blue);}
+  .c-amber{background:var(--amber-l);color:var(--amber);}
+  .calendar-legend{display:flex;flex-wrap:wrap;gap:8px;}
+  .calendar-empty{padding:32px;text-align:center;color:var(--text3);}
+
+
+  /* SMART ROUTE */
+  .smart-plan{margin-top:14px;border-top:1px solid var(--border);padding:14px 18px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(240,237,232,.85));}
+  .smart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+  .smart-title{font-size:13px;font-weight:700;color:var(--text);}
+  .smart-kpis{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .smart-order{display:flex;flex-direction:column;gap:10px;}
+  .smart-stop{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:var(--rs);background:var(--surface);}
+  .smart-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text2);flex-shrink:0;}
+  .smart-stop-main{min-width:0;flex:1;}
+  .smart-stop-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .smart-stop-name{font-size:13px;font-weight:600;color:var(--text);}
+  .smart-stop-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+  .smart-stop-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:3px;}
+/* LOGIN */
+.auth-overlay{position:fixed;inset:0;background:rgba(26,23,20,.58);display:none;align-items:center;justify-content:center;z-index:10000;backdrop-filter:blur(4px);}
+.auth-overlay.open{display:flex;}
+.auth-card{width:420px;max-width:92vw;background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--sh-lg);overflow:hidden;}
+.auth-card-head{padding:26px 28px 18px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#fff,#faf8f5);}
+.auth-card-title{font-family:'DM Serif Display',serif;font-size:28px;line-height:1;margin-bottom:8px;color:var(--text);}
+.auth-card-sub{font-size:13px;color:var(--text2);line-height:1.6;}
+.auth-card-body{padding:22px 28px 26px;}
+.auth-error{min-height:18px;font-size:12px;color:var(--red);margin-top:10px;}
+.user-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--border);border-radius:999px;background:var(--surface2);font-size:12px;color:var(--text);}
+.user-dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-logo">
+      <div class="wm">Decorarte</div>
+      <div class="sub">Logística</div>
+    </div>
+    <div class="nav-items">
+      <div class="nav-sec">Operações</div>
+      <button class="nav-item active" onclick="showPanel('dashboard')"><span class="icon">◈</span> Dashboard</button>
+      <button class="nav-item" onclick="showPanel('encomendas')"><span class="icon">◻</span> Encomendas <span class="nb" id="nb-enc">0</span></button>
+      <button class="nav-item" onclick="showPanel('orcamentos')"><span class="icon">◫</span> Orçamentos <span class="nb a" id="nb-orc">0</span></button>
+      <div class="nav-sec">Logística</div>
+      <button class="nav-item" onclick="showPanel('fornecedores')"><span class="icon">⬡</span> Fornecedores <span class="nb" id="nb-forn">0</span></button>
+      <button class="nav-item" onclick="showPanel('entregas')"><span class="icon">◎</span> Entregas <span class="nb g" id="nb-ent">0</span></button>
+      <button class="nav-item" onclick="showPanel('nao-faturadas')"><span class="icon">◔</span> Não faturadas <span class="nb a" id="nb-nfat">0</span></button>
+      <button class="nav-item" onclick="showPanel('fecho')"><span class="icon">◒</span> Entregues e pagos <span class="nb g" id="nb-fecho">0</span></button>
+      <button class="nav-item" onclick="showPanel('guias')"><span class="icon">◑</span> Guias em falta <span class="nb a" id="nb-guia">0</span></button>
+      <button class="nav-item" onclick="showPanel('calendario')"><span class="icon">◷</span> Calendário</button>
+      <button class="nav-item" onclick="showPanel('rotas')"><span class="icon">◌</span> Rotas do dia</button>
+      <button class="nav-item" onclick="showPanel('floral')"><span class="icon">✿</span> Floral <span class="nb" id="nb-floral">0</span></button>
+      <div class="nav-sec">Cadastros</div>
+      <button class="nav-item" onclick="showPanel('clientes')"><span class="icon">○</span> Clientes</button>
+      <button class="nav-item" onclick="showPanel('colaboradores')"><span class="icon">◉</span> Colaboradores</button>
+    </div>
+    <div class="nav-footer">
+      <div class="d" id="nav-date"></div>
+      <div style="margin-top:2px;">7 utilizadores activos</div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <h1 id="topbar-title">Dashboard</h1>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="user-pill" id="user-pill" style="display:none;">
+          <span class="user-dot"></span>
+          <span id="current-user-name">—</span>
+        </div>
+        <button class="btn btn-ghost" id="btn-logout" onclick="logout()" style="display:none;">Sair</button>
+        <button class="btn btn-primary" onclick="openNewModal()">+ Nova entrada</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="metrics">
+          <div class="mc"><div class="mc-label">Novos pedidos</div><div class="mc-val" id="mv-novos">0</div><div class="mc-sub">aguardam verificação</div></div>
+          <div class="mc warn"><div class="mc-label">Aguarda guia</div><div class="mc-val" id="mv-guia">0</div><div class="mc-sub">Marlene / Raquel fazer</div></div>
+          <div class="mc alert"><div class="mc-label">Pag. em falta</div><div class="mc-val" id="mv-pag">0</div><div class="mc-sub">bloqueiam entrega</div></div>
+          <div class="mc ok"><div class="mc-label">Prontos entrega</div><div class="mc-val" id="mv-prontos">0</div><div class="mc-sub">para despachar</div></div>
+          <div class="mc"><div class="mc-label">Fornecedores</div><div class="mc-val" id="mv-forn">0</div><div class="mc-sub">pedidos activos</div></div>
+          <div class="mc alert"><div class="mc-label">Alertas automáticos</div><div class="mc-val" id="mv-alertas">0</div><div class="mc-sub">ações a validar</div></div>
+        </div>
+        <div id="dash-alerts"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div style="font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Fluxo operacional</div>
+            <div class="flow-steps" id="dash-flow"></div>
+            <div id="dash-kanban"></div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Próximas entregas</div>
+            <div class="table-card" id="dash-proximas"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENCOMENDAS -->
+      <div class="panel" id="panel-encomendas">
+        <div class="table-card">
+          <div class="table-toolbar">
+            <input class="si" placeholder="Pesquisar..." id="s-enc" oninput="renderTable('enc')">
+            <select class="fs" id="f-enc-e" onchange="renderTable('enc')">
+              <option value="">Todos os estados</option>
+              <option>Novo</option><option>Verificado — Tânia</option><option>Aguarda fornecedor</option>
+              <option>Aguarda aprovação cliente</option><option>Confirmado</option>
+              <option>Aguarda guia de transporte</option><option>Pronto para entrega</option>
+              <option>Em rota</option><option>Entregue</option>
+            </select>
+            <select class="fs" id="f-enc-r" onchange="renderTable('enc')">
+              <option value="">Todos</option>
+              <option>Marlene</option><option>Raquel</option><option>Tânia</option><option>Evylleen</option><option>Maria</option><option>Juliander</option><option>Helder</option>
+            </select>
+            <button class="btn btn-ghost" onclick="toggleSelectAllVisible('enc', true)">Marcar visíveis</button>
+            <button class="btn btn-ghost" onclick="clearVisibleSelection('enc')">Limpar visíveis</button>
+            <button class="btn btn-primary" onclick="deleteSelectedOrders('enc')">Eliminar seleccionados</button>
+            <span class="selection-count" id="selection-count-enc">0 seleccionados</span>
+          </div>
+          <table><thead><tr>
+            <th class="table-check"><input type="checkbox" class="check-input" id="check-all-enc" onclick="event.stopPropagation();toggleSelectAllVisible('enc', this.checked)"></th>
+            <th>Ref. XD</th><th>Cliente</th><th>Tipo</th><th>Estado</th>
+            <th>Faturação</th><th>Entregador</th><th>Entrega prev.</th><th>Responsável</th>
+          </tr></thead><tbody id="tb-enc"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ORÇAMENTOS -->
+      <div class="panel" id="panel-orcamentos">
+        <div class="table-card">
+          <div class="table-toolbar">
+            <input class="si" placeholder="Pesquisar..." id="s-orc" oninput="renderTable('orc')">
+            <select class="fs" id="f-orc-e" onchange="renderTable('orc')">
+              <option value="">Todos</option>
+              <option>Novo</option><option>Verificado — Tânia</option>
+              <option>Aguarda aprovação cliente</option><option>Confirmado</option><option>Cancelado</option>
+            </select>
+            <select class="fs" id="f-orc-r" onchange="renderTable('orc')">
+              <option value="">Todos</option>
+              <option>Marlene</option><option>Raquel</option><option>Tânia</option><option>Evylleen</option><option>Maria</option><option>Juliander</option><option>Helder</option>
+            </select>
+            <button class="btn btn-ghost" onclick="toggleSelectAllVisible('orc', true)">Marcar visíveis</button>
+            <button class="btn btn-ghost" onclick="clearVisibleSelection('orc')">Limpar visíveis</button>
+            <button class="btn btn-primary" onclick="deleteSelectedOrders('orc')">Eliminar seleccionados</button>
+            <span class="selection-count" id="selection-count-orc">0 seleccionados</span>
+          </div>
+          <table><thead><tr>
+            <th class="table-check"><input type="checkbox" class="check-input" id="check-all-orc" onclick="event.stopPropagation();toggleSelectAllVisible('orc', this.checked)"></th>
+            <th>Ref. XD</th><th>Cliente</th><th>Estado</th>
+            <th>Responsável</th><th>Pagamento</th><th>Entrega prev.</th><th>Morada</th>
+          </tr></thead><tbody id="tb-orc"></tbody></table>
+        </div>
+      </div>
+
+      <!-- FORNECEDORES -->
+      <div class="panel" id="panel-fornecedores">
+        <div id="alert-forn"></div>
+        <div class="table-card">
+          <div class="table-toolbar">
+            <input class="si" placeholder="Pesquisar fornecedor..." id="s-forn" oninput="renderTable('forn')">
+            <select class="fs" id="f-forn-t" onchange="renderTable('forn')">
+              <option value="">Todos os tipos</option>
+              <option>Encomenda</option><option>Orçamento</option>
+            </select>
+            <select class="fs" id="f-forn-e" onchange="renderTable('forn')">
+              <option value="">Todos os estados</option>
+              <option>Aguarda confirmação</option><option>Confirmado</option>
+              <option>Pronto para levantar</option><option>Levantado</option>
+              <option>Entregue directo ao cliente</option>
+            </select>
+          </div>
+          <table><thead><tr>
+            <th>Fornecedor</th><th>Tipo</th><th>Nº Ordem</th><th>Descrição</th>
+            <th>Estado</th><th>Data pedido</th><th>Limite resposta</th><th>Levantar em</th>
+            <th>Ligação</th><th>Alerta</th>
+          </tr></thead><tbody id="tb-forn"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ENTREGAS -->
+      <div class="panel" id="panel-entregas">
+        <div id="alert-ent"></div>
+        <div class="table-card">
+          <div class="table-toolbar">
+            <input class="si" placeholder="Pesquisar..." id="s-ent" oninput="renderTable('ent')">
+            <select class="fs" id="f-ent-entregador" onchange="renderTable('ent')">
+              <option value="">Todos entregadores</option>
+              <option>Juliander</option><option>Helder</option><option>CTT</option><option>Transitário</option><option>Cliente levanta no showroom</option>
+            </select>
+          </div>
+          <table><thead><tr>
+            <th>Ref. XD</th><th>Cliente</th><th>Estado</th>
+            <th>Faturação</th><th>Pag. confirmado</th>
+            <th>Entregador</th><th>Guia transp.</th><th>Morada</th>
+          </tr></thead><tbody id="tb-ent"></tbody></table>
+        </div>
+      </div>
+
+
+      <!-- ENTREGUE MAS NÃO FATURADO -->
+      <div class="panel" id="panel-nao-faturadas">
+        <div class="alert-banner danger" style="margin-bottom:16px;">
+          ⚠ Estas encomendas já foram entregues, mas continuam sem faturação emitida. Esta vista existe para controlo financeiro e fecho operacional.
+        </div>
+        <div class="table-card">
+          <div class="table-toolbar">
+            <input class="si" placeholder="Pesquisar..." id="s-nfat" oninput="renderTable('nfat')">
+            <select class="fs" id="f-nfat-r" onchange="renderTable('nfat')">
+              <option value="">Todos os responsáveis</option>
+              <option>Marlene</option><option>Raquel</option><option>Tânia</option><option>Evylleen</option><option>Maria</option><option>Juliander</option><option>Helder</option>
+            </select>
+            <select class="fs" id="f-nfat-entregador" onchange="renderTable('nfat')">
+              <option value="">Todos os entregadores</option>
+              <option>Juliander</option><option>Helder</option><option>CTT</option><option>Transitário</option><option>Cliente levanta no showroom</option>
+            </select>
+          </div>
+          <table><thead><tr>
+            <th>Ref. XD</th><th>Cliente</th><th>Estado</th><th>Faturado</th><th>Condição</th><th>Entregador</th><th>Data entrega</th><th>Responsável</th>
+          </tr></thead><tbody id="tb-nfat"></tbody></table>
+        </div>
+      </div>
+
+      <!-- FECHO OPERACIONAL -->
+      <div class="panel" id="panel-fecho">
+        <div class="alert-banner" style="margin-bottom:16px;">
+          ✓ Vista de fecho para validar o que já está entregue e pago, com foco na conferência documental antes de limpar o arquivo mensal.
+        </div>
+        <div class="metrics" id="fecho-metrics"></div>
+        <div class="table-card">
+          <div class="table-toolbar">
+            <input class="si" placeholder="Pesquisar..." id="s-fecho" oninput="renderTable('fecho')">
+            <select class="fs" id="f-fecho-doc" onchange="renderTable('fecho')">
+              <option value="">Toda a documentação</option>
+              <option value="completo">Fecho completo</option>
+              <option value="pendente">Com pendências</option>
+            </select>
+            <select class="fs" id="f-fecho-entregador" onchange="renderTable('fecho')">
+              <option value="">Todos os tipos de entrega</option>
+              <option>Juliander</option><option>Helder</option><option>CTT</option><option>Transitário</option><option>Cliente levanta no showroom</option>
+            </select>
+          </div>
+          <table><thead><tr>
+            <th>Ref. XD</th><th>Cliente</th><th>Pagamento</th><th>Faturado</th><th>Guia</th><th>Entrega</th><th>Entregador</th><th>Documentação</th>
+          </tr></thead><tbody id="tb-fecho"></tbody></table>
+        </div>
+      </div>
+
+      <!-- GUIAS EM FALTA -->
+      <div class="panel" id="panel-guias">
+        <div class="alert-banner" style="margin-bottom:16px;">
+          ⚠ Estes pedidos estão em "Aguarda guia de transporte". A Marlene ou a Raquel devem fazer a guia com toda a informação abaixo e marcar como feita — só então o pedido avança para "Pronto para entrega".
+        </div>
+        <div class="table-card">
+          <table><thead><tr>
+            <th>Ref. XD</th><th>Cliente</th><th>Entregador</th>
+            <th>Morada de entrega</th><th>Faturação</th><th>Entrega prev.</th><th>Notas</th><th>Ação</th>
+          </tr></thead><tbody id="tb-guia"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ROTAS -->
+      <div class="panel" id="panel-rotas">
+        <div class="route-toolbar">
+          <div class="route-view-switch">
+            <button class="btn btn-primary" id="btn-route-view-rotas" onclick="setRouteView('rotas')">Ver rotas</button>
+            <button class="btn btn-ghost" id="btn-route-view-zonas" onclick="setRouteView('zonas')">Ver por zona</button>
+            <button class="btn btn-ghost" id="btn-route-smart" onclick="toggleSmartRoutes()">Logística inteligente</button>
+          </div>
+          <select class="fs" id="f-rota-v" onchange="renderRotas()">
+            <option value="">Todas as viaturas</option>
+            <option>Viatura 1</option><option>Viatura 2</option><option>CTT</option><option>Transitário</option><option>Showroom</option>
+          </select>
+          <select class="fs" id="f-rota-localidade" onchange="renderRotas()">
+            <option value="">Todas as localidades</option>
+          </select>
+        </div>
+        <div class="route-grid" id="route-grid"></div>
+      </div>
+
+      <!-- CALENDÁRIO -->
+      <div class="panel" id="panel-calendario">
+        <div class="calendar-shell">
+          <div class="calendar-toolbar">
+            <div class="calendar-title-wrap">
+              <div class="calendar-month-title" id="calendar-month-title">Calendário</div>
+              <div class="calendar-legend">
+                <span class="calendar-pill c-purple">Montagem</span>
+                <span class="calendar-pill c-red">Dia bloqueado</span>
+                <span class="calendar-pill c-green">Pronto para entrega</span>
+                <span class="calendar-pill c-blue">Orçamentos / tarefas</span>
+                <span class="calendar-pill c-amber">Pendências / fornecedor</span>
+              </div>
+            </div>
+            <div class="calendar-nav">
+              <button class="btn btn-ghost" onclick="changeCalendarMonth(-1)">← Mês anterior</button>
+              <button class="btn btn-ghost" onclick="goToCurrentMonth()">Hoje</button>
+              <button class="btn btn-ghost" onclick="changeCalendarMonth(1)">Próximo mês →</button>
+            </div>
+          </div>
+
+          <div class="calendar-filters">
+            <div class="fg">
+              <label class="flabel">Utilizador</label>
+              <select class="fselect" id="cal-user" onchange="renderCalendar()">
+                <option value="">Todos</option>
+                <option>Tânia</option><option>Marlene</option><option>Raquel</option><option>Evylleen</option><option>Maria</option><option>Juliander</option><option>Helder</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="flabel">Tipo</label>
+              <select class="fselect" id="cal-type" onchange="renderCalendar()">
+                <option value="">Tudo</option>
+                <option value="pendentes">Pendentes</option>
+                <option value="entregas">Entregas previstas</option>
+                <option value="pronto">Pronto para entrega</option>
+                <option value="montagens">Montagens</option>
+                <option value="floral">Floral</option>
+                <option value="bloqueios">Dias bloqueados</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="flabel">Leitura</label>
+              <div class="finput" style="display:flex;align-items:center;">Carga operacional diária, com clique para detalhe.</div>
+            </div>
+          </div>
+
+          <div class="calendar-grid-wrap">
+            <div class="calendar-weekdays">
+              <div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div><div>Dom</div>
+            </div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FLORAL -->
+      <div class="panel" id="panel-floral">
+        <div class="alert-banner" style="margin-bottom:16px;">
+          ✿ Vista relacional da Maria. Aqui entram automaticamente as encomendas que tenham componente floral, sem duplicar registos e sem misturar com a logística geral.
+        </div>
+        <div class="table-card" style="margin-bottom:16px;">
+          <div class="table-toolbar">
+            <input class="si" placeholder="Pesquisar cliente, referência ou localidade..." id="s-floral" oninput="renderFloral()">
+            <select class="fs" id="f-floral-entrega" onchange="renderFloral()">
+              <option value="">Todas as datas</option>
+              <option value="com-data">Com entrega prevista</option>
+              <option value="sem-data">Sem entrega prevista</option>
+            </select>
+            <div class="finput" style="display:flex;align-items:center;min-height:38px;">Kanban simples: Novo pedido → Em produção → Finalizado → Pronto para entrega</div>
+          </div>
+        </div>
+        <div id="floral-board"></div>
+      </div>
+
+<!-- COLABORADORES -->
+<div class="panel" id="panel-colaboradores">
+  <div class="alert-banner" style="margin-bottom:16px;">
+    Gestão interna dos perfis da equipa. Aqui podes editar nome, função e activar ou desactivar colaboradores sem perder histórico.
+  </div>
+  <div class="table-card">
+    <div class="table-toolbar">
+      <input class="si" placeholder="Pesquisar colaborador..." id="s-col" oninput="renderTable('col')">
+      <select class="fs" id="f-col-funcao" onchange="renderTable('col')">
+        <option value="">Todas as funções</option>
+        <option value="gestao_admin">Gestão / Administração</option>
+        <option value="administrativo">Administrativo</option>
+        <option value="administrativo_logistica">Administrativo / Logística</option>
+        <option value="floral">Floral</option>
+        <option value="entregas">Entregas</option>
+        <option value="design_interiores_logistica">Design de Interiores / Logística</option>
+      </select>
+      <select class="fs" id="f-col-ativo" onchange="renderTable('col')">
+        <option value="">Todos</option>
+        <option value="ativos">Activos</option>
+        <option value="inativos">Inactivos</option>
+      </select>
+    </div>
+    <table><thead><tr>
+      <th>Nome</th><th>Utilizador</th><th>Função</th><th>Estado</th><th>Criado em</th>
+    </tr></thead><tbody id="tb-col"></tbody></table>
+  </div>
+</div>
+
+      <!-- CLIENTES -->
+      <div class="panel" id="panel-clientes">
+        <div class="table-card">
+          <div class="table-toolbar">
+            <input class="si" placeholder="Pesquisar cliente..." id="s-cli" oninput="renderTable('cli')">
+            <select class="fs" id="f-cli-r" onchange="renderTable('cli')">
+              <option value="">Todas as regiões</option>
+              <option>Norte</option><option>Centro</option><option>Sul</option>
+            </select>
+            <select class="fs" id="f-cli-t" onchange="renderTable('cli')">
+              <option value="">Todos os tipos</option>
+              <option>Normal</option><option>Crédito</option>
+            </select>
+          </div>
+          <table><thead><tr>
+            <th>Nome</th><th>Região</th><th>Tipo</th><th>Responsável</th><th>Contacto</th><th>Morada</th><th>Registos</th>
+          </tr></thead><tbody id="tb-cli"></tbody></table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeDetail()"></div>
+<div class="detail" id="detail">
+  <div class="detail-hdr">
+    <div>
+      <div class="detail-title" id="dp-title"></div>
+      <div class="detail-ref" id="dp-ref"></div>
+    </div>
+    <button class="detail-close" onclick="closeDetail()">×</button>
+  </div>
+  <div class="detail-body" id="dp-body"></div>
+  <div class="detail-footer" id="dp-footer"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 id="modal-title">Nova entrada</h2>
+      <button class="detail-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveRecord()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="auth-overlay open" id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-card-head">
+      <div class="auth-card-title">Acesso reservado</div>
+      <div class="auth-card-sub">Introduza o nome de utilizador ou email interno e a palavra-passe para entrar no sistema de logística Decorarte.</div>
+    </div>
+    <div class="auth-card-body">
+      <div class="fg full">
+        <label class="flabel">Nome de utilizador</label>
+        <input class="finput" id="login-username" type="text" autocomplete="username" placeholder="Ex.: tania ou tania@decorarte.local">
+      </div>
+      <div class="fg full" style="margin-top:12px;">
+        <label class="flabel">Palavra-passe</label>
+        <input class="finput" id="login-password" type="password" autocomplete="current-password" placeholder="Introduza a palavra-passe">
+      </div>
+      <div class="auth-error" id="login-error"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+        <button class="btn btn-primary" id="btn-login" onclick="loginWithUsername()">Entrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Supabase -->
+<script>
+const SUPABASE_URL = 'https://uetannfjczgdxweybpfg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_rehDrusvUM0FO3ielk0TAA_yrUW3K74';
+const SUPABASE_STORAGE_BUCKET = 'fornecedor-anexos';
+const ADMIN_CHANGE_PASSWORD_API = '/api/admin-change-password';
+
+function createSupabaseClientSafe() {
+  const supabaseGlobal = window.supabase;
+
+  if (!supabaseGlobal) {
+    throw new Error('Biblioteca Supabase não carregada.');
+  }
+
+  if (typeof supabaseGlobal.createClient === 'function') {
+    const client = supabaseGlobal.createClient(SUPABASE_URL, SUPABASE_KEY);
+    if (!client || typeof client.from !== 'function') {
+      throw new Error('Cliente Supabase inválido após createClient().');
+    }
+    return client;
+  }
+
+  if (typeof supabaseGlobal.from === 'function') {
+    return supabaseGlobal;
+  }
+
+  throw new Error('A biblioteca Supabase foi carregada, mas não expôs um cliente utilizável.');
+}
+
+const supabaseClient = createSupabaseClientSafe();
+</script>
+
+<script>
+
+// ─── DATA / STORAGE ───────────────────────────────────────────────────────────
+const EMPTY_DB = { clientes: [], encomendas: [], fornecedores: [] };
+let DB = JSON.parse(JSON.stringify(EMPTY_DB));
+let CURRENT_EDIT = null;
+let CALENDAR_DATE = new Date();
+let ROUTE_VIEW = 'rotas';
+let ROUTE_SMART = false;
+let SELECTED_ENC_IDS = new Set();
+let CURRENT_USER = null;
+let CURRENT_PROFILE = null;
+let PERFIS_CACHE = [];
+let CURRENT_PASSWORD_COLLABORATOR_ID = null;
+
+function normaliseLoadedCliente(c){
+  c = c && typeof c==='object' ? c : {};
+  return {
+    id: String(c.id||''),
+    nome: String(c.nome||''),
+    regiao: String(c.regiao||''),
+    tipo: String(c.tipo||'Normal'),
+    morada: String(c.morada||''),
+    contacto: String(c.contacto||''),
+    responsavel: String(c.responsavel||''),
+    createdBy: String(c.createdBy||''),
+    updatedBy: String(c.updatedBy||''),
+    createdAt: String(c.createdAt||''),
+    updatedAt: String(c.updatedAt||'')
+  };
+}
+function normaliseLoadedEncomenda(e){
+  e = e && typeof e==='object' ? e : {};
+  return Object.assign({}, e, {
+    id: String(e.id||''),
+    clienteId: String(e.clienteId||''),
+    tipo: String(e.tipo||'Encomenda'),
+    estado: String(e.estado||'Novo'),
+    refXD: String(e.refXD||''),
+    localidade: String(e.localidade||''),
+    morada: String(e.morada||''),
+    notas: String(e.notas||''),
+    responsavel: String(e.responsavel||''),
+    responsavelFloral: String(e.responsavelFloral||''),
+    entregador: String(e.entregador||''),
+    faturacao: String(e.faturacao||''),
+    entrega: String(e.entrega||''),
+    dataMontagem: String(e.dataMontagem||''),
+    estadoFloral: String(e.estadoFloral||'Novo pedido'),
+    equipaMontagem: Number(e.equipaMontagem||0),
+    temMontagem: !!e.temMontagem,
+    temFloral: !!e.temFloral,
+    bloquearAgenda: !!e.bloquearAgenda,
+    faturado: !!e.faturado,
+    pagConfirmado: !!e.pagConfirmado,
+    guia: !!e.guia,
+    createdBy: String(e.createdBy||''),
+    updatedBy: String(e.updatedBy||''),
+    createdAt: String(e.createdAt||''),
+    updatedAt: String(e.updatedAt||'')
+  });
+}
+function normaliseLoadedFornecedor(f){
+  f = f && typeof f==='object' ? f : {};
+  return Object.assign({}, f, {
+    id: String(f.id||''),
+    fornecedor: String(f.fornecedor||''),
+    numOrdem: String(f.numOrdem||''),
+    tipoPedido: String(f.tipoPedido||'Encomenda'),
+    estado: String(f.estado||'Aguarda confirmação'),
+    dataPedido: String(f.dataPedido||''),
+    dataLimiteResposta: String(f.dataLimiteResposta||''),
+    localidade: String(f.localidade||''),
+    cidade: String(f.cidade||''),
+    morada: String(f.morada||''),
+    anexos: Array.isArray(f.anexos) ? f.anexos : [],
+    createdBy: String(f.createdBy||''),
+    updatedBy: String(f.updatedBy||''),
+    createdAt: String(f.createdAt||''),
+    updatedAt: String(f.updatedAt||'')
+  });
+}
+function normaliseLoadedDB(parsed){
+  parsed = parsed && typeof parsed==='object' ? parsed : {};
+  return {
+    clientes: Array.isArray(parsed.clientes) ? parsed.clientes.map(normaliseLoadedCliente) : [],
+    encomendas: Array.isArray(parsed.encomendas) ? parsed.encomendas.map(normaliseLoadedEncomenda) : [],
+    fornecedores: Array.isArray(parsed.fornecedores) ? parsed.fornecedores.map(normaliseLoadedFornecedor) : []
+  };
+}
+async function loadDB(){
+  try{
+    const [{ data: clientes, error: clientesError }, { data: encomendas, error: encomendasError }, { data: fornecedores, error: fornecedoresError }] = await Promise.all([
+      supabaseClient.from('clientes').select('*').order('created_at', { ascending: true }),
+      supabaseClient.from('encomendas').select('*').order('created_at', { ascending: true }),
+      supabaseClient.from('fornecedores').select('*').order('created_at', { ascending: true })
+    ]);
+
+    if(clientesError) throw clientesError;
+    if(encomendasError) throw encomendasError;
+    if(fornecedoresError) throw fornecedoresError;
+
+    return normaliseLoadedDB({
+      clientes: (clientes || []).map(function(c){
+        return {
+          id: c.id,
+          nome: c.nome,
+          regiao: c.regiao,
+          tipo: c.tipo,
+          morada: c.morada,
+          contacto: c.contacto,
+          responsavel: c.responsavel,
+          createdBy: c.created_by,
+          updatedBy: c.updated_by,
+          createdAt: c.created_at,
+          updatedAt: c.updated_at
+        };
+      }),
+      encomendas: (encomendas || []).map(function(e){
+        return {
+          id: e.id,
+          clienteId: e.cliente_id,
+          tipo: e.tipo,
+          estado: e.estado,
+          refXD: e.ref_xd,
+          localidade: e.localidade,
+          morada: e.morada,
+          notas: e.notas,
+          responsavel: e.responsavel,
+          responsavelFloral: e.responsavel_floral,
+          entregador: e.entregador,
+          faturacao: e.faturacao,
+          entrega: e.entrega,
+          dataMontagem: e.data_montagem,
+          estadoFloral: e.estado_floral,
+          equipaMontagem: e.equipa_montagem,
+          tipoMontagem: e.tipo_montagem,
+          notasMontagem: e.notas_montagem,
+          bloquearAgenda: e.bloquear_agenda,
+          temMontagem: e.tem_montagem,
+          temFloral: e.tem_floral,
+          faturado: e.faturado,
+          pagConfirmado: e.pag_confirmado,
+          guia: e.guia,
+          numeroGuia: e.numero_guia,
+          createdBy: e.created_by,
+          updatedBy: e.updated_by,
+          createdAt: e.created_at,
+          updatedAt: e.updated_at
+        };
+      }),
+      fornecedores: (fornecedores || []).map(function(f){
+        return {
+          id: f.id,
+          encId: f.enc_id,
+          fornecedor: f.fornecedor,
+          numOrdem: f.num_ordem,
+          tipoPedido: f.tipo_pedido,
+          estado: f.estado,
+          descricao: f.descricao,
+          dataPedido: f.data_pedido,
+          dataLimiteResposta: f.data_limite_resposta,
+          dataLevantar: f.data_levantar,
+          localidade: f.localidade,
+          cidade: f.cidade,
+          morada: f.morada,
+          entregaDirecta: f.entrega_directa,
+          anexos: Array.isArray(f.anexos) ? f.anexos : [],
+          createdBy: f.created_by,
+          updatedBy: f.updated_by,
+          createdAt: f.created_at,
+          updatedAt: f.updated_at
+        };
+      })
+    });
+  }catch(err){
+    console.warn('Erro ao carregar dados do Supabase. A iniciar base vazia.', err);
+    return JSON.parse(JSON.stringify(EMPTY_DB));
+  }
+}
+async function guardarDB(db){
+  const safeDB = normaliseLoadedDB(db);
+
+  const clientesPayload = safeDB.clientes.map(function(c){
+    return {
+      id: c.id,
+      nome: c.nome,
+      regiao: c.regiao,
+      tipo: c.tipo,
+      morada: c.morada,
+      contacto: c.contacto,
+      responsavel: c.responsavel,
+      created_by: c.createdBy || null,
+      updated_by: c.updatedBy || null,
+      created_at: c.createdAt || null,
+      updated_at: c.updatedAt || null
+    };
+  });
+
+  const encomendasPayload = safeDB.encomendas.map(function(e){
+    return {
+      id: e.id,
+      cliente_id: e.clienteId || null,
+      tipo: e.tipo,
+      estado: e.estado,
+      ref_xd: e.refXD,
+      localidade: e.localidade,
+      morada: e.morada,
+      notas: e.notas,
+      responsavel: e.responsavel,
+      responsavel_floral: e.responsavelFloral,
+      entregador: e.entregador,
+      faturacao: e.faturacao,
+      entrega: e.entrega || null,
+      data_montagem: e.dataMontagem || null,
+      estado_floral: e.estadoFloral,
+      equipa_montagem: Number(e.equipaMontagem || 0),
+      tipo_montagem: e.tipoMontagem || null,
+      notas_montagem: e.notasMontagem || null,
+      bloquear_agenda: !!e.bloquearAgenda,
+      tem_montagem: !!e.temMontagem,
+      tem_floral: !!e.temFloral,
+      faturado: !!e.faturado,
+      pag_confirmado: !!e.pagConfirmado,
+      guia: !!e.guia,
+      numero_guia: e.numeroGuia || null,
+      created_by: e.createdBy || null,
+      updated_by: e.updatedBy || null,
+      created_at: e.createdAt || null,
+      updated_at: e.updatedAt || null
+    };
+  });
+
+  const fornecedoresPayload = safeDB.fornecedores.map(function(f){
+    return {
+      id: f.id,
+      enc_id: f.encId || null,
+      fornecedor: f.fornecedor,
+      num_ordem: f.numOrdem,
+      tipo_pedido: f.tipoPedido,
+      estado: f.estado,
+      descricao: f.descricao || null,
+      data_pedido: f.dataPedido || null,
+      data_limite_resposta: f.dataLimiteResposta || null,
+      data_levantar: f.dataLevantar || null,
+      localidade: f.localidade || null,
+      cidade: f.cidade || null,
+      morada: f.morada || null,
+      entrega_directa: !!f.entregaDirecta,
+      anexos: Array.isArray(f.anexos) ? f.anexos : [],
+      created_by: f.createdBy || null,
+      updated_by: f.updatedBy || null,
+      created_at: f.createdAt || null,
+      updated_at: f.updatedAt || null
+    };
+  });
+
+  const { error: deleteFornecedoresError } = await supabaseClient
+    .from('fornecedores')
+    .delete()
+    .neq('id', '__none__');
+
+  if(deleteFornecedoresError) throw deleteFornecedoresError;
+
+  const { error: deleteEncomendasError } = await supabaseClient
+    .from('encomendas')
+    .delete()
+    .neq('id', '__none__');
+
+  if(deleteEncomendasError) throw deleteEncomendasError;
+
+  const { error: deleteClientesError } = await supabaseClient
+    .from('clientes')
+    .delete()
+    .neq('id', '__none__');
+
+  if(deleteClientesError) throw deleteClientesError;
+
+  if(clientesPayload.length){
+    const { error } = await supabaseClient.from('clientes').insert(clientesPayload);
+    if(error) throw error;
+  }
+
+  if(encomendasPayload.length){
+    const { error } = await supabaseClient.from('encomendas').insert(encomendasPayload);
+    if(error) throw error;
+  }
+
+  if(fornecedoresPayload.length){
+    const { error } = await supabaseClient.from('fornecedores').insert(fornecedoresPayload);
+    if(error) throw error;
+  }
+}
+let SAVE_QUEUE = Promise.resolve();
+function persistDB(){
+  SAVE_QUEUE = SAVE_QUEUE.then(function(){
+    return guardarDB(DB);
+  }).catch(function(err){
+    console.error(err);
+    alert(err && err.message ? err.message : 'Não foi possível guardar no servidor.');
+    throw err;
+  });
+  return SAVE_QUEUE;
+}
+function nextId(prefix, arr){
+  const nums = arr.map(function(x){
+    const m = String(x.id||'').match(/(\d+)$/);
+    return m ? parseInt(m[1],10) : 0;
+  });
+  const next = (nums.length ? Math.max.apply(null, nums) : 0) + 1;
+  return prefix + '-' + String(next).padStart(3,'0');
+}
+function esc(v){
+  return String(v==null?'':v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// ─── FLOW ─────────────────────────────────────────────────────────────────────
+const STATE_FLOW = [
+  'Novo','Verificado — Tânia','Aguarda fornecedor','Aguarda aprovação cliente',
+  'Confirmado','Aguarda guia de transporte','Pronto para entrega','Em rota','Entregue'
+];
+const FORN_FLOW = ['Aguarda confirmação','Confirmado','Pronto para levantar','Levantado'];
+const DELIVERY_OPTIONS = ['Juliander','Helder','CTT','Transitário','Cliente levanta no showroom'];
+const PAYMENT_OPTIONS = ['Pagar antes','Crédito — faturar depois','Pago — cheque','Pago — transferência','Pago — numerário'];
+const FLORAL_FLOW = ['Novo pedido','Em produção','Finalizado','Pronto para entrega'];
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function getCli(id){return DB.clientes.find(function(c){return c.id===id;})||{nome:'—',regiao:'',tipo:'Normal',morada:'',contacto:'',responsavel:''};}
+function getEnc(id){return DB.encomendas.find(function(e){return e.id===id;})||null;}
+function getForn(id){return DB.fornecedores.find(function(f){return f.id===id;})||null;}
+function matchesResponsavelFiltro(e, filtro){
+  if(!filtro) return true;
+  return e.responsavel===filtro ||
+         (e.temFloral && e.responsavelFloral===filtro) ||
+         e.entregador===filtro;
+}
+function responsaveisBadges(e){
+  const badges=[];
+  if(e.responsavel) badges.push(badge(e.responsavel,'b-gray'));
+  if(e.temFloral && e.responsavelFloral && e.responsavelFloral!==e.responsavel){
+    badges.push(badge(e.responsavelFloral,'b-blue'));
+  }
+  return badges.join(' ');
+}
+function fmtDate(d){if(!d)return'—';const p=d.split('-');return p.length===3?(p[2]+'/'+p[1]+'/'+p[0]):d;}
+function safe(v){return v?esc(v):'—';}
+
+function shortId(v){
+  var s = String(v || '');
+  if(!s) return '—';
+  if(s.length <= 10) return s;
+  return s.slice(0,8) + '…';
+}
+function formatDateTime(v){
+  if(!v) return '—';
+  var d = new Date(v);
+  if(Number.isNaN(d.getTime())) return esc(String(v));
+  return d.toLocaleString('pt-PT');
+}
+function getPerfilFromCacheById(id){
+  if(!id) return null;
+  return PERFIS_CACHE.find(function(p){ return p && p.id === id; }) || null;
+}
+function displayUserById(id){
+  if(!id) return '—';
+  if(CURRENT_PROFILE && CURRENT_PROFILE.id === id){
+    return esc(CURRENT_PROFILE.nome || CURRENT_PROFILE.username || 'Utilizador actual');
+  }
+  var perfil = getPerfilFromCacheById(id);
+  if(perfil){
+    return esc(perfil.nome || perfil.username || shortId(id));
+  }
+  return esc(shortId(id));
+}
+
+function funcaoLabel(valor){
+  const map = {
+    gestao_admin: 'Gestão / Administração',
+    administrativo: 'Administrativo',
+    administrativo_logistica: 'Administrativo / Logística',
+    floral: 'Floral',
+    entregas: 'Entregas',
+    design_interiores_logistica: 'Design de Interiores / Logística'
+  };
+  return map[valor] || valor || '—';
+}
+function funcaoBadge(valor){
+  const clsMap = {
+    gestao_admin: 'b-purple',
+    administrativo: 'b-blue',
+    administrativo_logistica: 'b-blue',
+    floral: 'b-green',
+    entregas: 'b-amber',
+    design_interiores_logistica: 'b-gray'
+  };
+  return badge(funcaoLabel(valor), clsMap[valor] || 'b-gray');
+}
+
+function renderAuditSection(entity){
+  if(!entity) return '';
+  return dsec('Rastreabilidade',
+    drow('Criado por', displayUserById(entity.createdBy))+
+    drow('Criado em', formatDateTime(entity.createdAt))+
+    drow('Última alteração por', displayUserById(entity.updatedBy))+
+    drow('Última alteração em', formatDateTime(entity.updatedAt))
+  );
+}
+
+async function loadAuditHistoryForOrder(orderId){
+  try{
+    const { data, error } = await supabaseClient
+      .from('auditoria_encomendas')
+      .select('*')
+      .eq('encomenda_id', String(orderId))
+      .order('created_at', { ascending: false });
+
+    if(error) throw error;
+    return Array.isArray(data) ? data : [];
+  }catch(err){
+    console.error('Erro ao carregar histórico:', err);
+    return [];
+  }
+}
+
+function diffOrderChanges(previousData, nextData){
+  const diffs = [];
+  const labels = {
+    refXD: 'Referência XD',
+    tipo: 'Tipo',
+    clienteId: 'Cliente',
+    estado: 'Estado',
+    responsavel: 'Responsável',
+    faturacao: 'Faturação',
+    pagConfirmado: 'Pagamento confirmado',
+    faturado: 'Faturado',
+    entregador: 'Entregador',
+    entrega: 'Previsão de entrega',
+    localidade: 'Localidade',
+    morada: 'Morada',
+    guia: 'Guia de transporte',
+    numeroGuia: 'N.º da guia',
+    temMontagem: 'Tem montagem',
+    dataMontagem: 'Data de montagem',
+    tipoMontagem: 'Tipo de montagem',
+    equipaMontagem: 'Equipa de montagem',
+    bloquearAgenda: 'Bloquear agenda',
+    notasMontagem: 'Notas de montagem',
+    temFloral: 'Inclui floral',
+    responsavelFloral: 'Responsável floral',
+    estadoFloral: 'Estado floral',
+    notas: 'Notas'
+  };
+
+  Object.keys(labels).forEach(function(key){
+    var prev = previousData ? previousData[key] : undefined;
+    var next = nextData ? nextData[key] : undefined;
+
+    if(key === 'clienteId'){
+      prev = prev ? getCli(prev).nome : '';
+      next = next ? getCli(next).nome : '';
+    }
+
+    if(typeof prev === 'boolean') prev = prev ? 'Sim' : 'Não';
+    if(typeof next === 'boolean') next = next ? 'Sim' : 'Não';
+
+    prev = prev == null ? '' : String(prev);
+    next = next == null ? '' : String(next);
+
+    if(prev !== next){
+      diffs.push({
+        campo: labels[key],
+        anterior: prev || '—',
+        novo: next || '—'
+      });
+    }
+  });
+
+  return diffs;
+}
+
+async function logOrderAudit(orderId, acao, dados){
+  if(!orderId || !CURRENT_USER) return;
+
+  try{
+    const payload = {
+      encomenda_id: String(orderId),
+      utilizador_id: CURRENT_USER.id,
+      utilizador_nome: getCurrentAuditUserName() || (CURRENT_PROFILE && CURRENT_PROFILE.username) || 'Utilizador',
+      acao: acao,
+      dados: dados || {}
+    };
+
+    const { error } = await supabaseClient
+      .from('auditoria_encomendas')
+      .insert([payload]);
+
+    if(error) throw error;
+  }catch(err){
+    console.error('Erro ao gravar histórico:', err);
+  }
+}
+
+function renderOrderHistory(history){
+  if(!history || !history.length){
+    return '<div style="font-size:13px;color:var(--text3);">Sem histórico registado.</div>';
+  }
+
+  return '<div style="display:flex;flex-direction:column;gap:12px;">' + history.map(function(item){
+    var dados = item && item.dados ? item.dados : {};
+    var changes = Array.isArray(dados.alteracoes) ? dados.alteracoes : [];
+    var changesHtml = changes.length
+      ? '<div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">' + changes.map(function(change){
+          return '<div style="font-size:12px;color:var(--text2);line-height:1.5;">'
+            + '<strong style="color:var(--text);">' + esc(change.campo || 'Alteração') + ':</strong> '
+            + '<span>' + esc(change.anterior || '—') + '</span> → '
+            + '<span>' + esc(change.novo || '—') + '</span>'
+            + '</div>';
+        }).join('') + '</div>'
+      : '';
+
+    return '<div style="padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:#fff;">'
+      + '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">'
+      + '<div><div style="font-size:13px;font-weight:700;color:var(--text);">' + esc(item.acao || 'Evento') + '</div>'
+      + '<div style="font-size:12px;color:var(--text2);margin-top:3px;">' + esc(item.utilizador_nome || 'Utilizador') + '</div></div>'
+      + '<div style="font-size:11px;color:var(--text3);white-space:nowrap;">' + esc(formatDateTime(item.created_at)) + '</div>'
+      + '</div>'
+      + changesHtml
+      + '</div>';
+  }).join('') + '</div>';
+}
+async function loadAuditHistory(tableName, entityField, entityId){
+  try{
+    const { data, error } = await supabaseClient
+      .from(tableName)
+      .select('*')
+      .eq(entityField, String(entityId))
+      .order('created_at', { ascending: false });
+
+    if(error) throw error;
+    return Array.isArray(data) ? data : [];
+  }catch(err){
+    console.error('Erro ao carregar histórico:', err);
+    return [];
+  }
+}
+
+async function logGenericAudit(tableName, entityField, entityId, acao, dados){
+  if(!entityId || !CURRENT_USER) return;
+
+  try{
+    const payload = {};
+    payload[entityField] = String(entityId);
+    payload.utilizador_id = CURRENT_USER.id;
+    payload.utilizador_nome = getCurrentAuditUserName() || (CURRENT_PROFILE && CURRENT_PROFILE.username) || 'Utilizador';
+    payload.acao = acao;
+    payload.dados = dados || {};
+
+    const { error } = await supabaseClient
+      .from(tableName)
+      .insert([payload]);
+
+    if(error) throw error;
+  }catch(err){
+    console.error('Erro ao gravar histórico:', err);
+  }
+}
+
+function renderGenericHistory(history){
+  if(!history || !history.length){
+    return '<div style="font-size:13px;color:var(--text3);">Sem histórico registado.</div>';
+  }
+
+  return '<div style="display:flex;flex-direction:column;gap:12px;">' + history.map(function(item){
+    var dados = item && item.dados ? item.dados : {};
+    var changes = Array.isArray(dados.alteracoes) ? dados.alteracoes : [];
+    var changesHtml = changes.length
+      ? '<div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">' + changes.map(function(change){
+          return '<div style="font-size:12px;color:var(--text2);line-height:1.5;">'
+            + '<strong style="color:var(--text);">' + esc(change.campo || 'Alteração') + ':</strong> '
+            + '<span>' + esc(change.anterior || '—') + '</span> → '
+            + '<span>' + esc(change.novo || '—') + '</span>'
+            + '</div>';
+        }).join('') + '</div>'
+      : '';
+
+    return '<div style="padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:#fff;">'
+      + '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">'
+      + '<div><div style="font-size:13px;font-weight:700;color:var(--text);">' + esc(item.acao || 'Evento') + '</div>'
+      + '<div style="font-size:12px;color:var(--text2);margin-top:3px;">' + esc(item.utilizador_nome || 'Utilizador') + '</div></div>'
+      + '<div style="font-size:11px;color:var(--text3);white-space:nowrap;">' + esc(formatDateTime(item.created_at)) + '</div>'
+      + '</div>'
+      + changesHtml
+      + '</div>';
+  }).join('') + '</div>';
+}
+
+function diffClientChanges(previousData, nextData){
+  const diffs = [];
+  const labels = {
+    nome: 'Nome',
+    regiao: 'Região',
+    tipo: 'Tipo',
+    responsavel: 'Responsável',
+    contacto: 'Contacto',
+    morada: 'Morada'
+  };
+
+  Object.keys(labels).forEach(function(key){
+    var prev = previousData ? previousData[key] : undefined;
+    var next = nextData ? nextData[key] : undefined;
+    prev = prev == null ? '' : String(prev);
+    next = next == null ? '' : String(next);
+    if(prev !== next){
+      diffs.push({ campo: labels[key], anterior: prev || '—', novo: next || '—' });
+    }
+  });
+
+  return diffs;
+}
+
+function diffSupplierChanges(previousData, nextData){
+  const diffs = [];
+  const labels = {
+    fornecedor: 'Fornecedor',
+    numOrdem: 'N.º Ordem',
+    tipoPedido: 'Tipo de pedido',
+    descricao: 'Descrição',
+    estado: 'Estado',
+    dataPedido: 'Data pedido',
+    dataLimiteResposta: 'Limite resposta',
+    dataLevantar: 'Data levantar',
+    morada: 'Morada',
+    encId: 'Encomenda associada',
+    entregaDirecta: 'Entrega directa ao cliente'
+  };
+
+  Object.keys(labels).forEach(function(key){
+    var prev = previousData ? previousData[key] : undefined;
+    var next = nextData ? nextData[key] : undefined;
+
+    if(key === 'encId'){
+      prev = prev ? (getEnc(prev) ? getEnc(prev).refXD : prev) : '';
+      next = next ? (getEnc(next) ? getEnc(next).refXD : next) : '';
+    }
+
+    if(typeof prev === 'boolean') prev = prev ? 'Sim' : 'Não';
+    if(typeof next === 'boolean') next = next ? 'Sim' : 'Não';
+
+    prev = prev == null ? '' : String(prev);
+    next = next == null ? '' : String(next);
+    if(prev !== next){
+      diffs.push({ campo: labels[key], anterior: prev || '—', novo: next || '—' });
+    }
+  });
+
+  return diffs;
+}
+function faturadoBadge(v){ return v ? badge('Sim','b-green') : badge('Não','b-red'); }
+function isEntregueNaoFaturado(e){ return e.tipo==='Encomenda' && e.estado==='Entregue' && !e.faturado; }
+function isEntreguePago(e){ return e.tipo==='Encomenda' && e.estado==='Entregue' && !!e.pagConfirmado; }
+function supplierRequestType(f){ return f && f.tipoPedido ? f.tipoPedido : 'Encomenda'; }
+function isSupplierQuoteOverdue(f){
+  if(supplierRequestType(f)!=='Orçamento' || !f.dataLimiteResposta) return false;
+  if(['Confirmado','Levantado','Entregue directo ao cliente'].includes(f.estado)) return false;
+  const dd=daysDiffFromToday(f.dataLimiteResposta);
+  return dd!==null && dd<0;
+}
+function isFechoCompleto(e){ return isEntreguePago(e) && !!e.faturado && !!e.guia; }
+function getDocumentacaoBadge(e){
+  if(isFechoCompleto(e)) return badge('Completo','b-green');
+  const missing=[];
+  if(!e.faturado) missing.push('Fatura');
+  if(!e.guia) missing.push('Guia');
+  return badge('Pendente: '+missing.join(' + '),'b-amber');
+}
+
+const ESTADO_CLS = {
+  'Novo':'b-gray','Verificado — Tânia':'b-amber','Aguarda fornecedor':'b-amber',
+  'Aguarda aprovação cliente':'b-blue','Confirmado':'b-blue','Aguarda guia de transporte':'b-amber',
+  'Pronto para entrega':'b-purple','Em rota':'b-purple','Entregue':'b-green','Cancelado':'b-red',
+  'Aguarda confirmação':'b-gray','Pronto para levantar':'b-green','Levantado':'b-blue',
+  'Entregue directo ao cliente':'b-amber',
+};
+function badge(t,cls){return '<span class="badge '+(cls||ESTADO_CLS[t]||'b-gray')+'">'+esc(t)+'</span>';}
+function pagBadge(fat,pag){
+  if(fat==='Pago — transferência'||fat==='Pago — cheque'||fat==='Pago — numerário') return badge(fat,'b-green');
+  if(fat==='Crédito — faturar depois') return badge('Crédito','b-purple');
+  if(pag) return badge(fat,'b-green');
+  return badge('Pagar antes','b-red');
+}
+function drow(k,v){return '<div class="drow"><span class="dkey">'+esc(k)+'</span><span class="dval">'+v+'</span></div>';}
+function dsec(title,rows){return '<div class="dsec"><div class="dsec-title">'+esc(title)+'</div>'+rows+'</div>';}
+
+function supplierAttachmentsHtml(f){
+  var anexos = Array.isArray(f.anexos) ? f.anexos : [];
+  if(!anexos.length){
+    return '<div style="font-size:13px;color:var(--text3);">Sem anexos associados.</div>';
+  }
+  return '<div style="display:flex;flex-direction:column;gap:10px;">' + anexos.map(function(a,idx){
+    var nome = a && a.nome ? a.nome : ('Anexo '+(idx+1));
+    var caminho = a && a.path ? a.path : '';
+    var href = (a && (a.publicUrl || a.url)) ? (a.publicUrl || a.url) : '#';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;">'
+      + '<div style="min-width:0;flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text);word-break:break-word;">'+esc(nome)+'</div>'
+      + (caminho ? '<div style="font-size:11px;color:var(--text3);word-break:break-all;">'+esc(caminho)+'</div>' : '')
+      + '</div>'
+      + '<div style="display:flex;gap:8px;align-items:center;">'
+      + (href && href!=='#' ? '<a class="btn btn-ghost" href="'+href+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">Abrir</a>' : '')
+      + (caminho ? '<button class="btn btn-ghost" onclick="event.stopPropagation(); deleteSupplierAttachmentByEncoded(\''+esc(String(f.id||''))+'\', \''
+      + encodeURIComponent(String(caminho||'')) + '\')">Eliminar</button>' : '')
+      + '</div>'
+      + '</div>';
+  }).join('') + '</div>';
+}
+var CURRENT_UPLOAD_FORN_ID = null;
+function ensureSupplierUploadInput(){
+  var input = document.getElementById('supplier-upload-input');
+  if(input) return input;
+  input = document.createElement('input');
+  input.type = 'file';
+  input.id = 'supplier-upload-input';
+  input.style.display = 'none';
+  input.multiple = true;
+  input.addEventListener('change', handleSupplierUploadSelection);
+  document.body.appendChild(input);
+  return input;
+}
+async function uploadSupplierFiles(id, files){
+  if(!files || !files.length) return;
+  var fornecedor = getForn(id);
+  if(!fornecedor) throw new Error('Fornecedor não encontrado para associar o anexo.');
+
+  var anexosAtuais = Array.isArray(fornecedor.anexos) ? fornecedor.anexos.slice() : [];
+
+  for(let i=0;i<files.length;i++){
+    const file = files[i];
+    const safeName = String(file.name || ('anexo-'+(i+1)))
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g,'')
+      .replace(/[^a-zA-Z0-9._-]/g,'_');
+
+    const filePath = 'fornecedor/' + encodeURIComponent(String(id)) + '/' + Date.now() + '_' + i + '_' + safeName;
+
+    const { error: uploadError } = await supabaseClient
+      .storage
+      .from(SUPABASE_STORAGE_BUCKET)
+      .upload(filePath, file, {
+        upsert: false,
+        cacheControl: '3600'
+      });
+
+    if(uploadError){
+      throw new Error('Falha ao enviar anexo "' + (file && file.name ? file.name : 'ficheiro') + '": ' + uploadError.message);
+    }
+
+    const { data: publicData } = supabaseClient
+      .storage
+      .from(SUPABASE_STORAGE_BUCKET)
+      .getPublicUrl(filePath);
+
+    anexosAtuais.push({
+      nome: file.name || safeName,
+      path: filePath,
+      publicUrl: publicData && publicData.publicUrl ? publicData.publicUrl : ''
+    });
+  }
+
+  fornecedor.anexos = anexosAtuais;
+  await persistDB();
+}
+
+function uploadSupplierAttachment(id){
+  CURRENT_UPLOAD_FORN_ID = id;
+  var input = ensureSupplierUploadInput();
+  input.value = '';
+  input.click();
+}
+async function handleSupplierUploadSelection(event){
+  var input = event.target;
+  var files = input.files ? Array.from(input.files) : [];
+  if(!files.length || !CURRENT_UPLOAD_FORN_ID) return;
+
+  try{
+    await uploadSupplierFiles(CURRENT_UPLOAD_FORN_ID, files);
+    await logGenericAudit('auditoria_fornecedores', 'fornecedor_id', CURRENT_UPLOAD_FORN_ID, 'Anexo adicionado', {
+      alteracoes: files.map(function(file){
+        return { campo: 'Anexo', anterior: '—', novo: file && file.name ? file.name : 'Ficheiro' };
+      })
+    });
+    refreshAll();
+    openDetail('forn', CURRENT_UPLOAD_FORN_ID);
+    alert('Anexo carregado com sucesso.');
+  }catch(err){
+    console.error(err);
+    alert(err && err.message ? err.message : 'Não foi possível carregar o anexo.');
+  }finally{
+    input.value = '';
+  }
+}
+
+
+function deleteSupplierAttachmentByEncoded(fornecedorId, ficheiroCodificado){
+  var path = '';
+  try{
+    path = decodeURIComponent(ficheiroCodificado || '');
+  }catch(_){
+    path = ficheiroCodificado || '';
+  }
+  return deleteSupplierAttachment(fornecedorId, path);
+}
+
+async function deleteSupplierAttachment(fornecedorId, ficheiro){
+  if(!fornecedorId || !ficheiro) return;
+  if(!confirm('Eliminar este anexo?')) return;
+
+  try{
+    const fornecedor = getForn(fornecedorId);
+    if(!fornecedor) throw new Error('Fornecedor não encontrado.');
+
+    const anexos = Array.isArray(fornecedor.anexos) ? fornecedor.anexos.slice() : [];
+    const alvo = anexos.find(function(a){ return a && a.path === ficheiro; });
+
+    if(!alvo){
+      throw new Error('Anexo não encontrado no registo do fornecedor.');
+    }
+
+    const { error: removeError } = await supabaseClient
+      .storage
+      .from(SUPABASE_STORAGE_BUCKET)
+      .remove([ficheiro]);
+
+    if(removeError){
+      throw new Error('Não foi possível eliminar o ficheiro do Storage: ' + removeError.message);
+    }
+
+    fornecedor.anexos = anexos.filter(function(a){ return !(a && a.path === ficheiro); });
+    await persistDB();
+    await logGenericAudit('auditoria_fornecedores', 'fornecedor_id', fornecedorId, 'Anexo eliminado', {
+      alteracoes: [
+        { campo: 'Anexo', anterior: alvo && alvo.nome ? alvo.nome : ficheiro, novo: 'Eliminado' }
+      ]
+    });
+    refreshAll();
+    openDetail('forn', fornecedorId);
+  }catch(err){
+    console.error(err);
+    alert(err && err.message ? err.message : 'Não foi possível eliminar o anexo.');
+  }
+}
+function refreshAll(){
+  renderDashboard();
+  renderTable('enc'); renderTable('orc'); renderTable('forn'); renderTable('ent'); renderTable('nfat'); renderTable('fecho'); renderTable('guia'); renderTable('cli');
+  renderRotas();
+  renderCalendar();
+  renderFloral();
+  updateBadges();
+}
+async function saveAndRefresh(){
+  try{
+    await persistDB();
+  }finally{
+    refreshAll();
+  }
+}
+
+// ─── CALENDÁRIO ───────────────────────────────────────────────────────────────
+function pad2(n){ return String(n).padStart(2,'0'); }
+function toISODate(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function isSameDayISO(a,b){ return a && b && a===b; }
+function startOfCalendarGrid(date){
+  const first = new Date(date.getFullYear(), date.getMonth(), 1);
+  const day = (first.getDay()+6)%7;
+  first.setDate(first.getDate()-day);
+  first.setHours(0,0,0,0);
+  return first;
+}
+function endOfMonth(date){ return new Date(date.getFullYear(), date.getMonth()+1, 0); }
+function calendarUserFilter(){ const el=document.getElementById('cal-user'); return el?el.value:''; }
+function calendarTypeFilter(){ const el=document.getElementById('cal-type'); return el?el.value:''; }
+function entryMatchesCalendarUser(e, user){
+  if(!user) return true;
+  return e.responsavel===user || e.responsavelFloral===user || e.entregador===user;
+}
+function supplierRelatedToUser(f, user){
+  if(!user) return true;
+  const e=getEnc(f.encId);
+  return !!(e && entryMatchesCalendarUser(e,user));
+}
+function getCalendarEntriesForDate(iso){
+  const user=calendarUserFilter();
+  const type=calendarTypeFilter();
+  const result={ pendentes:[], entregas:[], pronto:[], montagens:[], floral:[], bloqueios:[], alertas:[] };
+
+  DB.encomendas.forEach(function(e){
+    if(!entryMatchesCalendarUser(e,user)) return;
+    const ativo = e.estado!=='Entregue' && e.estado!=='Cancelado';
+    const isPendente = ['Novo','Verificado — Tânia','Aguarda fornecedor','Aguarda aprovação cliente','Confirmado','Aguarda guia de transporte'].includes(e.estado);
+    if(ativo && e.entrega===iso){
+      if(isPendente) result.pendentes.push(e);
+      result.entregas.push(e);
+      if(e.estado==='Pronto para entrega') result.pronto.push(e);
+      if(e.temFloral) result.floral.push(e);
+    }
+    if(e.temMontagem && e.dataMontagem===iso) result.montagens.push(e);
+    if(e.temFloral && e.entrega!==iso && e.dataMontagem!==iso && e.estado!=='Entregue' && e.estado!=='Cancelado' && e.entrega===iso) result.floral.push(e);
+    if(e.temMontagem && e.dataMontagem===iso && e.bloquearAgenda){
+      result.bloqueios.push(e);
+      result.alertas.push('Dia bloqueado para entregas e levantamentos.');
+    }
+  });
+
+  DB.fornecedores.forEach(function(f){
+    if(!supplierRelatedToUser(f,user)) return;
+    if(f.dataLevantar===iso && ['Aguarda confirmação','Confirmado','Pronto para levantar'].includes(f.estado)){
+      result.pendentes.push({refXD:f.numOrdem||f.id, fornecedor:f.fornecedor, fornecedorItem:true, estado:f.estado});
+    }
+  });
+
+  if(type){
+    const map={ pendentes:['pendentes'], entregas:['entregas'], pronto:['pronto'], montagens:['montagens'], floral:['floral'], bloqueios:['bloqueios'] };
+    const keep=map[type]||[];
+    Object.keys(result).forEach(function(k){ if(!keep.includes(k) && k!=='alertas') result[k]=[]; });
+  }
+  return result;
+}
+function getCalendarSummary(dayData){
+  return [
+    { key:'montagens', label:'Mont.', cls:'c-purple' },
+    { key:'bloqueios', label:'Bloq.', cls:'c-red' },
+    { key:'pronto', label:'Pronto', cls:'c-green' },
+    { key:'entregas', label:'Entrega', cls:'c-blue' },
+    { key:'pendentes', label:'Pend.', cls:'c-amber' }
+  ].filter(function(item){ return (dayData[item.key]||[]).length; });
+}
+function renderCalendar(){
+  const title=document.getElementById('calendar-month-title');
+  const grid=document.getElementById('calendar-grid');
+  if(!title || !grid) return;
+  const monthLabel=CALENDAR_DATE.toLocaleDateString('pt-PT',{month:'long',year:'numeric'});
+  title.textContent=monthLabel.charAt(0).toUpperCase()+monthLabel.slice(1);
+  const start=startOfCalendarGrid(CALENDAR_DATE);
+  const todayIso=toISODate(new Date());
+  let html='';
+  for(let i=0;i<42;i++){
+    const d=new Date(start); d.setDate(start.getDate()+i);
+    const iso=toISODate(d);
+    const sameMonth=d.getMonth()===CALENDAR_DATE.getMonth();
+    const dayData=getCalendarEntriesForDate(iso);
+    const summary=getCalendarSummary(dayData);
+    const load=dayData.pendentes.length+dayData.entregas.length+dayData.pronto.length+dayData.montagens.length+dayData.floral.length;
+    const blocked=dayData.bloqueios.length>0;
+    const notes=[];
+    if(dayData.montagens.length) notes.push(dayData.montagens.length+' montagem'+(dayData.montagens.length>1?'s':''));
+    if(dayData.entregas.length) notes.push(dayData.entregas.length+' entrega'+(dayData.entregas.length>1?'s':''));
+    if(dayData.floral.length) notes.push(dayData.floral.length+' floral');
+    html += '<div class="calendar-day '+(sameMonth?'':'other-month ')+(blocked?' blocked':'')+(iso===todayIso?' today':'')+'" onclick="openDayPanel(\''+iso+'\')">'+
+      '<div class="calendar-day-head"><span class="calendar-day-num">'+d.getDate()+'</span><span class="calendar-load">'+(load?load+' item'+(load>1?'s':''):'—')+'</span></div>'+
+      '<div class="calendar-pills">'+(summary.length?summary.map(function(item){ return '<span class="calendar-pill '+item.cls+'">'+item.label+' '+dayData[item.key].length+'</span>'; }).join(''):'')+'</div>'+
+      '<div class="calendar-note-list">'+(notes.length?notes.slice(0,3).map(function(n){ return '<div class="calendar-note">'+esc(n)+'</div>'; }).join(''):'<div class="calendar-note">Sem actividade relevante</div>')+'</div>'+
+      '</div>';
+  }
+  grid.innerHTML=html;
+}
+function changeCalendarMonth(delta){ CALENDAR_DATE = new Date(CALENDAR_DATE.getFullYear(), CALENDAR_DATE.getMonth()+delta, 1); renderCalendar(); }
+function goToCurrentMonth(){ const now=new Date(); CALENDAR_DATE = new Date(now.getFullYear(), now.getMonth(), 1); renderCalendar(); }
+function openDayPanel(iso){
+  const d=new Date(iso+'T00:00:00');
+  const dayData=getCalendarEntriesForDate(iso);
+  const fmt=d.toLocaleDateString('pt-PT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const blocks=[];
+  function encLine(e){ const cli=e.fornecedorItem?e.fornecedor:getCli(e.clienteId).nome; return '<div class="drow"><span class="dkey">'+esc(e.refXD||'—')+' · '+esc(cli||'—')+'</span><span class="dval">'+(e.estado?badge(e.estado):'')+'</span></div>'; }
+  if(dayData.alertas.length){ blocks.push('<div class="alert-banner danger" style="margin-bottom:16px;">⚠ '+esc(dayData.alertas[0])+'</div>'); }
+  blocks.push(dsec('Tarefas pendentes por utilizador', dayData.pendentes.length ? dayData.pendentes.map(encLine).join('') : '<div style="font-size:12px;color:var(--text3);">Sem pendências.</div>'));
+  blocks.push(dsec('Entregas desse dia', dayData.entregas.length ? dayData.entregas.map(encLine).join('') : '<div style="font-size:12px;color:var(--text3);">Sem entregas.</div>'));
+  blocks.push(dsec('Montagens desse dia', dayData.montagens.length ? dayData.montagens.map(encLine).join('') : '<div style="font-size:12px;color:var(--text3);">Sem montagens.</div>'));
+  blocks.push(dsec('Floral desse dia', dayData.floral.length ? dayData.floral.map(encLine).join('') : '<div style="font-size:12px;color:var(--text3);">Sem floral.</div>'));
+  document.getElementById('dp-title').textContent='Calendário operacional';
+  document.getElementById('dp-ref').textContent=fmt.charAt(0).toUpperCase()+fmt.slice(1);
+  document.getElementById('dp-body').innerHTML=blocks.join('');
+  document.getElementById('dp-footer').innerHTML='<button class="btn btn-ghost" onclick="closeDetail()">Fechar</button>';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(function(){document.getElementById('detail').classList.add('open');},10);
+}
+
+
+function getFloralItems(){
+  return DB.encomendas.filter(function(e){
+    return e.temFloral && e.responsavelFloral==='Maria' && e.estado!=='Cancelado';
+  });
+}
+function renderFloral(){
+  const mount=document.getElementById('floral-board');
+  if(!mount) return;
+  const q=(document.getElementById('s-floral')||{value:''}).value.trim().toLowerCase();
+  const entregaFiltro=(document.getElementById('f-floral-entrega')||{value:''}).value;
+  const items=getFloralItems().filter(function(e){
+    const cli=getCli(e.clienteId);
+    const hay=[e.refXD, cli.nome, e.localidade, e.morada, e.notas, e.estadoFloral].join(' ').toLowerCase();
+    const okQ=!q || hay.indexOf(q)>-1;
+    const okEntrega=!entregaFiltro || (entregaFiltro==='com-data' ? !!e.entrega : !e.entrega);
+    return okQ && okEntrega;
+  });
+  const html='<div class="kanban-wrap">'+FLORAL_FLOW.map(function(col){
+    const cards=items.filter(function(e){ return (e.estadoFloral||'Novo pedido')===col; });
+    return '<div class="kcol">'+
+      '<div class="kcol-hdr"><span>'+esc(col)+'</span><span class="kcol-cnt">'+cards.length+'</span></div>'+
+      '<div class="kcol-cards">'+(cards.length ? cards.map(function(e){
+        const cli=getCli(e.clienteId);
+        const warn=!e.entrega || e.estado==='Aguarda fornecedor';
+        return `<div class="kcard ${warn?'kcard-warn':''}" onclick="openDetail('enc','${e.id}')">`+
+          '<div class="kc-ref">'+esc(e.refXD||'—')+'</div>'+
+          '<div class="kc-name">'+esc(cli.nome||'Sem cliente')+'</div>'+
+          '<div style="font-size:11px;color:var(--text3);margin-bottom:8px;">'+esc(e.localidade||'Sem localidade')+(e.entrega?' · Entrega '+fmtDate(e.entrega):' · Sem data')+'</div>'+
+          '<div class="kc-meta">'+
+            badge('Maria','b-blue')+
+            (e.estado?badge(e.estado,'b-gray'):'')+
+            (e.entrega?badge(fmtDate(e.entrega),'b-purple'):'')+
+          '</div>'+
+        '</div>';
+      }).join('') : '<div style="padding:10px 12px;font-size:12px;color:var(--text3);">Sem pedidos nesta fase.</div>')+'</div>'+
+    '</div>';
+  }).join('')+'</div>';
+  mount.innerHTML=html;
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+function showPanel(name){
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  const panel=document.getElementById('panel-'+name);
+  if(panel) panel.classList.add('active');
+  const map={dashboard:0,encomendas:1,orcamentos:2,fornecedores:3,entregas:4,'nao-faturadas':5,fecho:6,guias:7,calendario:8,rotas:9,floral:10,clientes:11,colaboradores:12};
+  const navItem=document.querySelectorAll('.nav-item')[map[name]];
+  if(navItem) navItem.classList.add('active');
+  const titles={dashboard:'Dashboard',encomendas:'Encomendas',orcamentos:'Orçamentos',
+    fornecedores:'Fornecedores',entregas:'Entregas','nao-faturadas':'Entregue mas não faturado',fecho:'Entregues e pagos',guias:'Guias em falta',
+    calendario:'Calendário',rotas:'Rotas do dia',floral:'Módulo floral',clientes:'Clientes',colaboradores:'Colaboradores'};
+  document.getElementById('topbar-title').textContent=titles[name]||name;
+  if(name==='calendario') renderCalendar();
+  else if(name==='rotas') renderRotas();
+  else if(name==='floral') renderFloral();
+  else if(name==='dashboard') renderDashboard();
+  else if(name==='encomendas') renderTable('enc');
+  else if(name==='orcamentos') renderTable('orc');
+  else if(name==='fornecedores') renderTable('forn');
+  else if(name==='entregas') renderTable('ent');
+  else if(name==='nao-faturadas') renderTable('nfat');
+  else if(name==='fecho') renderTable('fecho');
+  else if(name==='guias') renderTable('guia');
+  else if(name==='clientes') renderTable('cli');
+  else if(name==='colaboradores') renderTable('col');
+}
+
+// ─── BADGES UPDATE ────────────────────────────────────────────────────────────
+function updateBadges(){
+  const enc=DB.encomendas;
+  document.getElementById('nb-enc').textContent=enc.filter(function(e){return e.tipo!=='Orçamento'&&e.estado!=='Entregue'&&e.estado!=='Cancelado';}).length;
+  document.getElementById('nb-orc').textContent=enc.filter(function(e){return e.tipo==='Orçamento'&&e.estado!=='Entregue'&&e.estado!=='Cancelado';}).length;
+  const fornAtivos=DB.fornecedores.filter(function(f){return f.estado!=='Levantado'&&f.estado!=='Entregue directo ao cliente';}).length;
+  const fornAtrasados=DB.fornecedores.filter(function(f){ return isSupplierQuoteOverdue(f); }).length;
+  document.getElementById('nb-forn').textContent=fornAtivos;
+  document.getElementById('nb-forn').className='nb'+(fornAtrasados>0?' a':'');
+  document.getElementById('nb-ent').textContent=enc.filter(function(e){return e.estado==='Pronto para entrega';}).length;
+  const naoFat=enc.filter(function(e){return isEntregueNaoFaturado(e);}).length;
+  document.getElementById('nb-nfat').textContent=naoFat;
+  document.getElementById('nb-nfat').className='nb'+(naoFat>0?' a':'');
+  const fecho=enc.filter(function(e){return isEntreguePago(e);}).length;
+  document.getElementById('nb-fecho').textContent=fecho;
+  document.getElementById('nb-fecho').className='nb'+(fecho>0?' g':'');
+  const guias=enc.filter(function(e){return e.estado==='Aguarda guia de transporte'&&!e.guia;}).length;
+  document.getElementById('nb-guia').textContent=guias;
+  document.getElementById('nb-guia').className='nb'+(guias>0?' a':'');
+  const floral=enc.filter(function(e){return e.temFloral && e.responsavelFloral==='Maria' && e.estadoFloral && e.estadoFloral!=='Pronto para entrega' && e.estado!=='Entregue' && e.estado!=='Cancelado';}).length;
+  document.getElementById('nb-floral').textContent=floral;
+  document.getElementById('nb-floral').className='nb'+(floral>0?' a':'');
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+function daysDiffFromToday(iso){
+  if(!iso) return null;
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  const d=new Date(iso+'T00:00:00');
+  if(Number.isNaN(d.getTime())) return null;
+  return Math.round((d-today)/86400000);
+}
+function getOperationalAlerts(){
+  const alerts=[];
+  DB.encomendas.forEach(function(e){
+    if(e.entrega && e.estado!=='Entregue' && e.estado!=='Cancelado'){
+      const dd=daysDiffFromToday(e.entrega);
+      const wrongState=!['Pronto para entrega','Em rota'].includes(e.estado);
+      if(dd!==null && dd>=0 && dd<=3 && wrongState){
+        alerts.push({
+          level:'danger',
+          icon:'⚠',
+          text:'Entrega próxima com estado desajustado: '+(e.refXD||e.id)+' prevista para '+fmtDate(e.entrega)+' e ainda em “'+(e.estado||'—')+'”.',
+          action:"showPanel('encomendas')"
+        });
+      }
+    }
+    if(e.temMontagem && e.dataMontagem && e.estado!=='Cancelado'){
+      const ddm=daysDiffFromToday(e.dataMontagem);
+      const equipa=Number(e.equipaMontagem||0);
+      if(ddm!==null && ddm>=0 && ddm<=7 && equipa>=3){
+        alerts.push({
+          level:'warn',
+          icon:'🛠',
+          text:'Montagem com equipa grande: '+(e.refXD||e.id)+' em '+fmtDate(e.dataMontagem)+' com '+equipa+' pessoas.',
+          action:"showPanel('calendario')"
+        });
+      }
+    }
+  });
+  DB.fornecedores.forEach(function(f){
+    if(isSupplierQuoteOverdue(f)){
+      alerts.push({
+        level:'danger',
+        icon:'⚑',
+        text:'Orçamento de fornecedor atrasado: '+(f.fornecedor||'Fornecedor')+' / '+(f.numOrdem||f.id)+' ultrapassou o prazo de resposta em '+fmtDate(f.dataLimiteResposta)+'.',
+        action:"showPanel('fornecedores')"
+      });
+    }
+    if(!f.dataLevantar) return;
+    if(['Levantado','Entregue directo ao cliente'].includes(f.estado)) return;
+    const dd=daysDiffFromToday(f.dataLevantar);
+    if(dd!==null && dd<0){
+      alerts.push({
+        level:'danger',
+        icon:'⧗',
+        text:'Fornecedor atrasado: '+(f.fornecedor||'Fornecedor')+' / '+(f.numOrdem||f.id)+' devia estar pronto em '+fmtDate(f.dataLevantar)+'.',
+        action:"showPanel('fornecedores')"
+      });
+    }
+  });
+  return alerts;
+}
+function renderDashboard(){
+  const enc=DB.encomendas;
+  const novos=enc.filter(function(e){return e.estado==='Novo';}).length;
+  const guias=enc.filter(function(e){return e.estado==='Aguarda guia de transporte'&&!e.guia;}).length;
+  const semPag=enc.filter(function(e){return e.estado==='Pronto para entrega'&&!e.pagConfirmado&&e.faturacao==='Pagar antes';}).length;
+  const prontos=enc.filter(function(e){return e.estado==='Pronto para entrega';}).length;
+  const fornAtivos=DB.fornecedores.filter(function(f){return f.estado!=='Levantado'&&f.estado!=='Entregue directo ao cliente';}).length;
+
+  document.getElementById('mv-novos').textContent=novos;
+  document.getElementById('mv-guia').textContent=guias;
+  document.getElementById('mv-pag').textContent=semPag;
+  document.getElementById('mv-prontos').textContent=prontos;
+  document.getElementById('mv-forn').textContent=fornAtivos;
+  const operationalAlerts=getOperationalAlerts();
+  document.getElementById('mv-alertas').textContent=operationalAlerts.length;
+
+  let alerts='';
+  if(guias>0) alerts+='<div class="alert-banner">📋 '+guias+' guia(s) de transporte por fazer. <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;margin-left:8px;" onclick="showPanel(\'guias\')">Ver →</button></div>';
+  if(semPag>0) alerts+='<div class="alert-banner danger">⚠ '+semPag+' entrega(s) bloqueada(s) sem pagamento confirmado.</div>';
+  const naoFat=enc.filter(function(e){return isEntregueNaoFaturado(e);}).length;
+  if(naoFat>0) alerts+='<div class="alert-banner danger">💶 '+naoFat+' encomenda(s) entregue(s) ainda não faturada(s). <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;margin-left:8px;" onclick="showPanel(\'nao-faturadas\')">Ver →</button></div>';
+  if(operationalAlerts.length){
+    alerts += operationalAlerts.slice(0,6).map(function(a){
+      return '<div class="alert-banner '+(a.level==='danger'?'danger':'')+'">'+a.icon+' '+esc(a.text)+' <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;margin-left:8px;" onclick="'+a.action+'">Ver →</button></div>';
+    }).join('');
+  }
+  document.getElementById('dash-alerts').innerHTML=alerts || '<div class="alert-banner">✓ Sem alertas críticos neste momento.</div>';
+
+  const steps=['Novo','Verificado — Tânia','Confirmado','Aguarda guia de transporte','Pronto para entrega','Em rota'];
+  document.getElementById('dash-flow').innerHTML=steps.map(function(s){
+    const n=enc.filter(function(e){return e.estado===s;}).length;
+    const isGuia=s==='Aguarda guia de transporte';
+    return '<div class="fs-step" onclick="showPanel(\''+(isGuia?'guias':'encomendas')+'\')" style="'+(isGuia&&n>0?'background:var(--amber-l);':'')+'">'+
+      '<div class="fsn" style="'+(isGuia&&n>0?'color:var(--amber);':'')+'">'+n+'</div>'+
+      '<div class="fsl">'+esc(s)+'</div>'+(n>0?'<div class="fsc">'+n+'</div>':'')+'</div>';
+  }).join('');
+
+  const cols=['Novo','Aguarda guia de transporte','Pronto para entrega'];
+  document.getElementById('dash-kanban').innerHTML='<div class="kanban-wrap">'+cols.map(function(col){
+    const items=enc.filter(function(e){return e.estado===col;}).slice(0,3);
+    const isGuia=col==='Aguarda guia de transporte';
+    return '<div class="kcol"><div class="kcol-hdr" style="'+(isGuia?'border-left:3px solid var(--amber);':'')+'">'+esc(col)+'<span class="kcol-cnt">'+items.length+'</span></div>'+
+      '<div class="kcol-cards">'+
+      (items.length?items.map(function(e){
+        const cli=getCli(e.clienteId);
+        return '<div class="kcard'+(isGuia?' kcard-warn':'')+'" onclick="openDetail(\'enc\',\''+e.id+'\')">'+
+          '<div class="kc-ref">'+esc(e.refXD)+'</div><div class="kc-name">'+esc(cli.nome)+'</div>'+
+          '<div class="kc-meta">'+badge(e.tipo)+pagBadge(e.faturacao,e.pagConfirmado)+'</div></div>';
+      }).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px;">Sem registos</div>')+'</div></div>';
+  }).join('')+'</div>';
+
+  const prox=enc.filter(function(e){return e.entrega&&e.estado!=='Entregue'&&e.estado!=='Cancelado';})
+    .sort(function(a,b){return String(a.entrega).localeCompare(String(b.entrega));}).slice(0,5);
+  document.getElementById('dash-proximas').innerHTML='<table><thead><tr><th>Ref</th><th>Cliente</th><th>Estado</th><th>Entrega</th></tr></thead><tbody>'+
+    (prox.length?prox.map(function(e){
+      const cli=getCli(e.clienteId);
+      return '<tr onclick="openDetail(\'enc\',\''+e.id+'\')"><td class="mono">'+esc(e.refXD)+'</td><td>'+esc(cli.nome)+'</td><td>'+badge(e.estado)+'</td><td class="muted">'+fmtDate(e.entrega)+'</td></tr>';
+    }).join(''):'<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text3);">Sem entregas próximas</td></tr>')+'</tbody></table>';
+
+  updateBadges();
+}
+
+// ─── TABLE RENDERS ────────────────────────────────────────────────────────────
+function getFilteredEncRows(){
+  const s=(document.getElementById('s-enc')||{value:''}).value.toLowerCase();
+  const fe=(document.getElementById('f-enc-e')||{value:''}).value;
+  const fr=(document.getElementById('f-enc-r')||{value:''}).value;
+  return DB.encomendas.filter(function(e){return e.tipo!=='Orçamento';})
+    .filter(function(e){return !fe||e.estado===fe;})
+    .filter(function(e){return matchesResponsavelFiltro(e, fr);})
+    .filter(function(e){return !s||String(e.refXD).toLowerCase().includes(s)||String(getCli(e.clienteId).nome).toLowerCase().includes(s);});
+}
+function getFilteredOrcRows(){
+  const s=(document.getElementById('s-orc')||{value:''}).value.toLowerCase();
+  const fe=(document.getElementById('f-orc-e')||{value:''}).value;
+  const fr=(document.getElementById('f-orc-r')||{value:''}).value;
+  return DB.encomendas.filter(function(e){return e.tipo==='Orçamento';})
+    .filter(function(e){return !fe||e.estado===fe;})
+    .filter(function(e){return matchesResponsavelFiltro(e, fr);})
+    .filter(function(e){return !s||String(e.refXD).toLowerCase().includes(s)||String(getCli(e.clienteId).nome).toLowerCase().includes(s);});
+}
+function getFilteredFornRows(){
+  const s=(document.getElementById('s-forn')||{value:''}).value.toLowerCase();
+  const fe=(document.getElementById('f-forn-e')||{value:''}).value;
+  const ft=(document.getElementById('f-forn-t')||{value:''}).value;
+  return DB.fornecedores
+    .filter(function(f){return !ft||supplierRequestType(f)===ft;})
+    .filter(function(f){return !fe||f.estado===fe;})
+    .filter(function(f){
+      const enc=getEnc(f.encId);
+      const hay=[f.fornecedor,f.numOrdem,f.descricao,enc?enc.refXD:''].join(' ').toLowerCase();
+      return !s || hay.includes(s);
+    });
+}
+function getFilteredEntRows(){
+  const s=(document.getElementById('s-ent')||{value:''}).value.toLowerCase();
+  const fe=(document.getElementById('f-ent-entregador')||{value:''}).value;
+  return DB.encomendas.filter(function(e){return ['Pronto para entrega','Em rota','Confirmado'].includes(e.estado);})
+    .filter(function(e){return !fe||e.entregador===fe;})
+    .filter(function(e){return !s||String(getCli(e.clienteId).nome).toLowerCase().includes(s)||String(e.refXD).toLowerCase().includes(s);});
+}
+function getFilteredNfatRows(){
+  const s=(document.getElementById('s-nfat')||{value:''}).value.toLowerCase();
+  const fr=(document.getElementById('f-nfat-r')||{value:''}).value;
+  const fe=(document.getElementById('f-nfat-entregador')||{value:''}).value;
+  return DB.encomendas.filter(function(e){ return isEntregueNaoFaturado(e); })
+    .filter(function(e){ return matchesResponsavelFiltro(e, fr); })
+    .filter(function(e){ return !fe || e.entregador===fe; })
+    .filter(function(e){ return !s || String(e.refXD).toLowerCase().includes(s) || String(getCli(e.clienteId).nome).toLowerCase().includes(s) || String(e.localidade||'').toLowerCase().includes(s); });
+}
+function getFilteredFechoRows(){
+  const s=(document.getElementById('s-fecho')||{value:''}).value.toLowerCase();
+  const fd=(document.getElementById('f-fecho-doc')||{value:''}).value;
+  const fe=(document.getElementById('f-fecho-entregador')||{value:''}).value;
+  return DB.encomendas.filter(function(e){ return isEntreguePago(e); })
+    .filter(function(e){ return !fe || e.entregador===fe; })
+    .filter(function(e){ return !fd || (fd==='completo' ? isFechoCompleto(e) : !isFechoCompleto(e)); })
+    .filter(function(e){ return !s || String(e.refXD).toLowerCase().includes(s) || String(getCli(e.clienteId).nome).toLowerCase().includes(s) || String(e.localidade||'').toLowerCase().includes(s); });
+}
+function refreshSelectionCounters(){
+  const encRows=getFilteredEncRows();
+  const orcRows=getFilteredOrcRows();
+  const encCount=encRows.filter(function(e){ return SELECTED_ENC_IDS.has(e.id); }).length;
+  const orcCount=orcRows.filter(function(e){ return SELECTED_ENC_IDS.has(e.id); }).length;
+  const encLbl=document.getElementById('selection-count-enc');
+  const orcLbl=document.getElementById('selection-count-orc');
+  if(encLbl) encLbl.textContent=encCount+' seleccionados';
+  if(orcLbl) orcLbl.textContent=orcCount+' seleccionados';
+  const encAll=document.getElementById('check-all-enc');
+  if(encAll){ encAll.checked=!!encRows.length && encCount===encRows.length; encAll.indeterminate=encCount>0 && encCount<encRows.length; }
+  const orcAll=document.getElementById('check-all-orc');
+  if(orcAll){ orcAll.checked=!!orcRows.length && orcCount===orcRows.length; orcAll.indeterminate=orcCount>0 && orcCount<orcRows.length; }
+}
+function toggleOrderSelection(id, checked){
+  if(checked) SELECTED_ENC_IDS.add(id);
+  else SELECTED_ENC_IDS.delete(id);
+  refreshSelectionCounters();
+}
+function toggleSelectAllVisible(kind, checked){
+  const rows=kind==='enc' ? getFilteredEncRows() : getFilteredOrcRows();
+  rows.forEach(function(e){ if(checked) SELECTED_ENC_IDS.add(e.id); else SELECTED_ENC_IDS.delete(e.id); });
+  renderTable(kind);
+}
+function clearVisibleSelection(kind){
+  const rows=kind==='enc' ? getFilteredEncRows() : getFilteredOrcRows();
+  rows.forEach(function(e){ SELECTED_ENC_IDS.delete(e.id); });
+  renderTable(kind);
+}
+function deleteSelectedOrders(kind){
+  const rows=kind==='enc' ? getFilteredEncRows() : getFilteredOrcRows();
+  const ids=rows.filter(function(e){ return SELECTED_ENC_IDS.has(e.id); }).map(function(e){ return e.id; });
+  if(!ids.length){
+    alert(kind==='enc' ? 'Seleccione pelo menos uma encomenda.' : 'Seleccione pelo menos um orçamento.');
+    return;
+  }
+  if(!confirm('Eliminar '+ids.length+' registo(s) seleccionados?')) return;
+  DB.encomendas = DB.encomendas.filter(function(e){ return !ids.includes(e.id); });
+  ids.forEach(function(id){ SELECTED_ENC_IDS.delete(id); });
+  persistDB();
+  closeDetail();
+  refreshAll();
+}
+function renderFechoMetrics(rows){
+  const mount=document.getElementById('fecho-metrics');
+  if(!mount) return;
+  const completos=rows.filter(function(e){ return isFechoCompleto(e); }).length;
+  const pendentes=rows.length-completos;
+  const comGuia=rows.filter(function(e){ return !!e.guia; }).length;
+  const faturadas=rows.filter(function(e){ return !!e.faturado; }).length;
+  mount.innerHTML=''
+    +'<div class="mc ok"><div class="mc-label">Entregues e pagos</div><div class="mc-val">'+rows.length+'</div><div class="mc-sub">base para balanço geral</div></div>'
+    +'<div class="mc ok"><div class="mc-label">Fecho completo</div><div class="mc-val">'+completos+'</div><div class="mc-sub">pagos, faturados e com guia</div></div>'
+    +'<div class="mc warn"><div class="mc-label">Com pendências</div><div class="mc-val">'+pendentes+'</div><div class="mc-sub">documentos por validar</div></div>'
+    +'<div class="mc"><div class="mc-label">Guias conferidas</div><div class="mc-val">'+comGuia+'</div><div class="mc-sub">'+faturadas+' faturadas</div></div>';
+}
+
+
+function syncFloralFields(){
+  const tem=document.getElementById('f-temFloral');
+  const resp=document.getElementById('f-responsavelFloral');
+  const estado=document.getElementById('f-estadoFloral');
+  if(!tem || !resp || !estado) return;
+  const ativo=tem.value==='1';
+  resp.disabled=!ativo;
+  estado.disabled=!ativo;
+  if(ativo){
+    if(!resp.value) resp.value='Maria';
+    if(!estado.value) estado.value='Novo pedido';
+  }else{
+    resp.value='';
+    estado.value='';
+  }
+}
+function syncSupplierFields(){
+  const tipo=document.getElementById('f-tipoPedidoForn');
+  const limite=document.getElementById('f-dataLimiteResposta');
+  if(!tipo || !limite) return;
+  const ativo=tipo.value==='Orçamento';
+  limite.disabled=false;
+  limite.placeholder = ativo ? '' : 'Opcional para encomenda';
+}
+
+async function saveRecord(){
+  const type = CURRENT_EDIT ? CURRENT_EDIT.type : (function(){
+    const panel=getActivePanel();
+    if(panel==='clientes') return 'cli';
+    if(panel==='fornecedores') return 'forn';
+    return 'enc';
+  })();
+
+  if(type==='col_password'){
+    try{
+      const ok = await saveCollaboratorPassword();
+      if(ok){
+        closeModal();
+        CURRENT_PASSWORD_COLLABORATOR_ID = null;
+        alert('Palavra-passe actualizada com sucesso.');
+      }
+    }catch(err){
+      console.error(err);
+      alert('Erro ao alterar a palavra-passe: ' + (err && err.message ? err.message : 'erro desconhecido'));
+    }
+    return;
+  }
+
+  if(type==='col'){
+    try{
+      const ok = await saveCollaboratorProfile();
+      if(ok){
+        closeModal();
+        renderTable('col');
+        if(document.getElementById('detail').classList.contains('open') && CURRENT_EDIT && CURRENT_EDIT.id){
+          closeDetail();
+        }
+      }
+    }catch(err){
+      console.error(err);
+      alert('Erro ao guardar colaborador: ' + (err && err.message ? err.message : 'erro desconhecido'));
+    }
+    return;
+  }
+
+  if(type==='cli'){
+    const nome=document.getElementById('f-nome').value.trim();
+    if(!nome){ alert('Preencha o nome do cliente.'); return; }
+    const payload={
+      nome:nome,
+      regiao:document.getElementById('f-regiao').value,
+      tipo:document.getElementById('f-tipo').value,
+      responsavel:document.getElementById('f-resp').value,
+      contacto:document.getElementById('f-contacto').value.trim(),
+      morada:document.getElementById('f-morada').value.trim()
+    };
+    let clientAuditAction = 'Cliente criado';
+    let clientAuditPayload = { nome: nome };
+    if(CURRENT_EDIT){
+      const c=getCli(CURRENT_EDIT.id);
+      const previousSnapshot = JSON.parse(JSON.stringify(c));
+      payload.createdBy = c.createdBy || '';
+      payload.createdAt = c.createdAt || '';
+      payload.updatedBy = CURRENT_USER ? CURRENT_USER.id : (c.updatedBy || '');
+      Object.assign(c,payload);
+      clientAuditAction = 'Cliente editado';
+      clientAuditPayload = { alteracoes: diffClientChanges(previousSnapshot, c) };
+      window.__pendingClientAudit = { id: c.id, acao: clientAuditAction, dados: clientAuditPayload };
+    }else{
+      payload.id=nextId('CLI', DB.clientes);
+      payload.createdBy = CURRENT_USER ? CURRENT_USER.id : '';
+      payload.updatedBy = CURRENT_USER ? CURRENT_USER.id : '';
+      DB.clientes.push(payload);
+      window.__pendingClientAudit = { id: payload.id, acao: clientAuditAction, dados: clientAuditPayload };
+    }
+  }
+
+  if(type==='col_password'){
+    try{
+      const ok = await saveCollaboratorPassword();
+      if(ok){
+        closeModal();
+        CURRENT_PASSWORD_COLLABORATOR_ID = null;
+        alert('Palavra-passe actualizada com sucesso.');
+      }
+    }catch(err){
+      console.error(err);
+      alert('Erro ao alterar a palavra-passe: ' + (err && err.message ? err.message : 'erro desconhecido'));
+    }
+    return;
+  }
+
+
+  if(type==='forn'){
+    const fornecedor=document.getElementById('f-forn').value.trim();
+    if(!fornecedor){ alert('Preencha o nome do fornecedor.'); return; }
+    const tipoPedido=document.getElementById('f-tipoPedidoForn').value;
+    const dataLimiteResposta=document.getElementById('f-dataLimiteResposta').value;
+    if(tipoPedido==='Orçamento' && !dataLimiteResposta){ alert('Preencha a data limite de resposta para o orçamento.'); return; }
+    const dataLevantar=document.getElementById('f-datalevantar').value;
+    if(dataLevantar && !assertAgendaAvailable(dataLevantar,'a recolha')) return;
+    const anexosInput=document.getElementById('f-anexos');
+    const anexosSelecionados=anexosInput && anexosInput.files ? Array.from(anexosInput.files) : [];
+    const payload={
+      fornecedor:fornecedor,
+      numOrdem:document.getElementById('f-ordem').value.trim(),
+      tipoPedido:tipoPedido,
+      descricao:document.getElementById('f-desc').value.trim(),
+      estado:document.getElementById('f-estado-forn').value,
+      dataPedido:document.getElementById('f-datapedido').value,
+      dataLimiteResposta:dataLimiteResposta,
+      dataLevantar:dataLevantar,
+      morada:document.getElementById('f-morada').value.trim(),
+      encId:document.getElementById('f-enc').value,
+      entregaDirecta:document.getElementById('f-directa').value==='1'
+    };
+    let fornecedorId='';
+    let fornecedorAuditAction = 'Fornecedor criado';
+    let fornecedorAuditPayload = { fornecedor: fornecedor };
+    if(CURRENT_EDIT){
+      const f=getForn(CURRENT_EDIT.id);
+      const previousSnapshot = JSON.parse(JSON.stringify(f));
+      payload.createdBy = f.createdBy || '';
+      payload.createdAt = f.createdAt || '';
+      payload.updatedBy = CURRENT_USER ? CURRENT_USER.id : (f.updatedBy || '');
+      Object.assign(f,payload);
+      fornecedorId=f.id;
+      fornecedorAuditAction = 'Fornecedor editado';
+      fornecedorAuditPayload = { alteracoes: diffSupplierChanges(previousSnapshot, f) };
+    }else{
+      payload.id=nextId('FRN', DB.fornecedores);
+      payload.createdBy = CURRENT_USER ? CURRENT_USER.id : '';
+      payload.updatedBy = CURRENT_USER ? CURRENT_USER.id : '';
+      DB.fornecedores.push(payload);
+      fornecedorId=payload.id;
+      fornecedorAuditPayload = { fornecedor: fornecedor, tipoPedido: tipoPedido };
+    }
+    window.__pendingSupplierAudit = { id: fornecedorId, acao: fornecedorAuditAction, dados: fornecedorAuditPayload };
+
+    try{
+      await guardarDB(DB);
+    }catch(err){
+      console.error(err);
+      alert('Erro ao guardar o pedido no servidor: ' + (err && err.message ? err.message : 'erro desconhecido'));
+      return;
+    }
+
+    if(anexosSelecionados.length){
+      try{
+        await uploadSupplierFiles(fornecedorId, anexosSelecionados);
+      }catch(err){
+        console.error(err);
+        try{ DB = await loadDB(); }catch(_){}
+        closeModal();
+        refreshAll();
+        alert('Pedido guardado com sucesso, mas o anexo não foi carregado: ' + (err && err.message ? err.message : 'erro desconhecido'));
+        return;
+      }
+    }
+
+    try{ DB = await loadDB(); }catch(_){}
+    closeModal();
+    refreshAll();
+    return;
+  }
+
+
+if(type==='col'){
+  document.getElementById('modal-title').textContent='Editar colaborador';
+  document.getElementById('modal-body').innerHTML='<div class="form-grid">'+
+    '<div class="fg"><label class="flabel">Nome</label><input class="finput" id="f-col-nome" value="'+esc(data.nome||'')+'" placeholder="Nome completo"></div>'+
+    '<div class="fg"><label class="flabel">Utilizador</label><input class="finput" id="f-col-username" value="'+esc(data.username||'')+'" disabled></div>'+
+    '<div class="fg"><label class="flabel">Função</label><select class="fselect" id="f-col-funcao">'+
+      '<option value="gestao_admin" '+((data.funcao||'')==='gestao_admin'?'selected':'')+'>Gestão / Administração</option>'+
+      '<option value="administrativo" '+((data.funcao||'')==='administrativo'?'selected':'')+'>Administrativo</option>'+
+      '<option value="administrativo_logistica" '+((data.funcao||'')==='administrativo_logistica'?'selected':'')+'>Administrativo / Logística</option>'+
+      '<option value="floral" '+((data.funcao||'')==='floral'?'selected':'')+'>Floral</option>'+
+      '<option value="entregas" '+((data.funcao||'')==='entregas'?'selected':'')+'>Entregas</option>'+
+      '<option value="design_interiores_logistica" '+((data.funcao||'')==='design_interiores_logistica'?'selected':'')+'>Design de Interiores / Logística</option>'+
+    '</select></div>'+
+    '<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-col-ativo"><option value="1" '+(data.ativo!==false?'selected':'')+'>Activo</option><option value="0" '+(data.ativo===false?'selected':'')+'>Inactivo</option></select></div>'+
+    '<div class="fg full"><div class="guia-info"><strong>Nota</strong>Nesta fase, esta área gere o perfil operacional. A criação de novas contas e a redefinição de palavra-passe serão ligadas ao backend seguro no Vercel.</div></div>'+
+    '</div>';
+}
+
+  if(type==='enc'){
+    const refXD=document.getElementById('f-refxd').value.trim();
+    if(!refXD){ alert('Preencha a referência XD.'); return; }
+    const tipoVal=document.getElementById('f-tipo').value;
+    const entrega=document.getElementById('f-data').value;
+    if(entrega && !assertAgendaAvailable(entrega,'a entrega')) return;
+    const numeroGuia=(document.getElementById('f-numeroGuia')||{value:''}).value.trim();
+    if(document.getElementById('f-guia').value==='1' && !numeroGuia){
+      alert('Preencha o N.º da guia de transporte.');
+      return;
+    }
+    const payload={
+      refXD:refXD,
+      tipo:tipoVal,
+      clienteId:document.getElementById('f-cli').value,
+      estado:document.getElementById('f-estado-enc').value,
+      responsavel:document.getElementById('f-resp').value,
+      faturacao:document.getElementById('f-fat').value,
+      pagConfirmado:document.getElementById('f-pag').value==='1',
+      faturado:document.getElementById('f-faturado').value==='1',
+      entregador:document.getElementById('f-entregador').value,
+      entrega:entrega,
+      localidade:document.getElementById('f-localidade').value.trim(),
+      morada:document.getElementById('f-morada').value.trim(),
+      guia:document.getElementById('f-guia').value==='1',
+      numeroGuia:numeroGuia,
+      temMontagem:document.getElementById('f-temMontagem').value==='1',
+      dataMontagem:document.getElementById('f-dataMontagem').value,
+      tipoMontagem:document.getElementById('f-tipoMontagem').value,
+      equipaMontagem:document.getElementById('f-equipaMontagem').value ? parseInt(document.getElementById('f-equipaMontagem').value,10) : 0,
+      bloquearAgenda:document.getElementById('f-bloquearAgenda').value==='1',
+      notasMontagem:document.getElementById('f-notasMontagem').value.trim(),
+      temFloral:document.getElementById('f-temFloral').value==='1',
+      responsavelFloral:(function(){
+        const temFloral=document.getElementById('f-temFloral').value==='1';
+        if(!temFloral) return '';
+        return document.getElementById('f-responsavelFloral').value || 'Maria';
+      })(),
+      estadoFloral:(function(){
+        const temFloral=document.getElementById('f-temFloral').value==='1';
+        if(!temFloral) return '';
+        return document.getElementById('f-estadoFloral').value || 'Novo pedido';
+      })(),
+      notas:document.getElementById('f-notas').value.trim()
+    };
+    let orderAuditAction = 'Encomenda criada';
+    let orderAuditPayload = { referencia: refXD, tipo: tipoVal };
+    if(CURRENT_EDIT){
+      const e=getEnc(CURRENT_EDIT.id);
+      const previousSnapshot = JSON.parse(JSON.stringify(e));
+      payload.createdBy = e.createdBy || '';
+      payload.createdAt = e.createdAt || '';
+      payload.updatedBy = CURRENT_USER ? CURRENT_USER.id : (e.updatedBy || '');
+      Object.assign(e,payload);
+      if(payload.tipo==='Orçamento' && String(e.id).startsWith('ENC-')) e.id='ORC-'+String(e.id).split('-').slice(1).join('-');
+      if(payload.tipo!=='Orçamento' && String(e.id).startsWith('ORC-')) e.id='ENC-'+String(e.id).split('-').slice(1).join('-');
+      const changes = diffOrderChanges(previousSnapshot, e);
+      orderAuditAction = 'Encomenda editada';
+      orderAuditPayload = { alteracoes: changes };
+    }else{
+      payload.id=tipoVal==='Orçamento'?nextId('ORC', DB.encomendas):nextId('ENC', DB.encomendas);
+      payload.createdBy = CURRENT_USER ? CURRENT_USER.id : '';
+      payload.updatedBy = CURRENT_USER ? CURRENT_USER.id : '';
+      DB.encomendas.push(payload);
+      orderAuditPayload = {
+        referencia: payload.refXD,
+        tipo: payload.tipo,
+        cliente: payload.clienteId ? getCli(payload.clienteId).nome : '—'
+      };
+    }
+    CURRENT_EDIT = CURRENT_EDIT || null;
+    window.__pendingOrderAudit = {
+      id: CURRENT_EDIT ? CURRENT_EDIT.id : payload.id,
+      acao: orderAuditAction,
+      dados: orderAuditPayload
+    };
+  }
+
+  try{
+    await guardarDB(DB);
+    if(window.__pendingOrderAudit && window.__pendingOrderAudit.id){
+      await logOrderAudit(window.__pendingOrderAudit.id, window.__pendingOrderAudit.acao, window.__pendingOrderAudit.dados);
+      window.__pendingOrderAudit = null;
+    }
+    if(window.__pendingClientAudit && window.__pendingClientAudit.id){
+      await logGenericAudit('auditoria_clientes', 'cliente_id', window.__pendingClientAudit.id, window.__pendingClientAudit.acao, window.__pendingClientAudit.dados);
+      window.__pendingClientAudit = null;
+    }
+    closeModal();
+    refreshAll();
+  }catch(err){
+    console.error(err);
+    window.__pendingOrderAudit = null;
+    window.__pendingClientAudit = null;
+    alert('Erro ao guardar no servidor: ' + (err && err.message ? err.message : 'erro desconhecido'));
+  }
+}
+function closeModal(){
+  CURRENT_EDIT=null;
+  setModalOpen(false);
+}
+
+
+function withTimeout(promise, ms, label){
+  return Promise.race([
+    promise,
+    new Promise(function(_, reject){
+      setTimeout(function(){
+        reject(new Error((label || 'Operação') + ' demorou demasiado tempo.'));
+      }, ms);
+    })
+  ]);
+}
+
+function usernameToEmail(username){
+  var clean = String(username || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g,'');
+
+  if(clean.indexOf('@') > -1){
+    return clean;
+  }
+
+  return clean + '@decorarte.local';
+}
+
+function setAuthError(message){
+  var el = document.getElementById('login-error');
+  if(el) el.textContent = message || '';
+}
+
+function setLoginLoading(isLoading){
+  var btn = document.getElementById('btn-login');
+  if(btn){
+    btn.disabled = !!isLoading;
+    btn.textContent = isLoading ? 'A entrar...' : 'Entrar';
+  }
+}
+
+function showAuthOverlay(show){
+  var overlay = document.getElementById('auth-overlay');
+  if(overlay) overlay.classList.toggle('open', !!show);
+}
+
+function updateUserUi(){
+  var pill = document.getElementById('user-pill');
+  var name = document.getElementById('current-user-name');
+  var btnLogout = document.getElementById('btn-logout');
+
+  if(CURRENT_PROFILE){
+    if(pill) pill.style.display = 'inline-flex';
+    if(name) name.textContent = CURRENT_PROFILE.nome || CURRENT_PROFILE.username || 'Utilizador';
+    if(btnLogout) btnLogout.style.display = 'inline-flex';
+  }else{
+    if(pill) pill.style.display = 'none';
+    if(name) name.textContent = '—';
+    if(btnLogout) btnLogout.style.display = 'none';
+  }
+}
+
+async function loadAuthenticatedProfile(user){
+  if(!user) throw new Error('Sessão não encontrada.');
+
+  const { data, error } = await supabaseClient
+    .from('perfis')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if(error) throw error;
+  if(!data) throw new Error('Perfil não encontrado para este utilizador.');
+
+  if(data.ativo === false){
+    throw new Error('Este utilizador encontra-se inactivo.');
+  }
+
+  CURRENT_USER = user;
+  CURRENT_PROFILE = data;
+  updateUserUi();
+}
+
+async function loginWithUsername(){
+  const usernameInput = document.getElementById('login-username');
+  const passwordInput = document.getElementById('login-password');
+
+  const username = usernameInput ? usernameInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value : '';
+
+  if(!username){
+    setAuthError('Introduza o nome de utilizador.');
+    return;
+  }
+  if(!password){
+    setAuthError('Introduza a palavra-passe.');
+    return;
+  }
+
+  setAuthError('');
+  setLoginLoading(true);
+
+  try{
+    const email = usernameToEmail(username);
+
+    const authResult = await withTimeout(
+      supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      }),
+      10000,
+      'Autenticação'
+    );
+
+    if(authResult.error) throw authResult.error;
+    if(!authResult.data || !authResult.data.user) throw new Error('Não foi possível iniciar sessão.');
+
+    await withTimeout(loadAuthenticatedProfile(authResult.data.user), 7000, 'Leitura do perfil');
+    await loadPerfisCache();
+
+    showAuthOverlay(false);
+    await withTimeout(initApp(), 12000, 'Carregamento do sistema');
+  }catch(err){
+    console.error(err);
+    setAuthError(err && err.message ? err.message : 'Não foi possível entrar.');
+    showAuthOverlay(true);
+  }finally{
+    setLoginLoading(false);
+  }
+}
+
+async function logout(){
+  try{
+    await supabaseClient.auth.signOut();
+  }catch(err){
+    console.error(err);
+  }finally{
+    CURRENT_USER = null;
+    CURRENT_PROFILE = null;
+    updateUserUi();
+    showAuthOverlay(true);
+    setAuthError('');
+    var u = document.getElementById('login-username');
+    var p = document.getElementById('login-password');
+    if(p) p.value = '';
+    if(u) u.focus();
+  }
+}
+
+function getCurrentAuditUserName(){
+  return CURRENT_PROFILE && CURRENT_PROFILE.nome ? CURRENT_PROFILE.nome : '';
+}
+
+async function loadPerfisCache(){
+  try{
+    const result = await withTimeout(
+      supabaseClient
+        .from('perfis')
+        .select('id, username, nome, funcao, ativo, created_at')
+        .order('nome', { ascending: true }),
+      5000,
+      'Leitura dos perfis'
+    );
+
+    const data = result.data;
+    const error = result.error;
+
+    if(error){
+      PERFIS_CACHE = CURRENT_PROFILE ? [CURRENT_PROFILE] : [];
+      return;
+    }
+
+    PERFIS_CACHE = Array.isArray(data) ? data : [];
+    if(CURRENT_PROFILE && !PERFIS_CACHE.find(function(p){ return p.id === CURRENT_PROFILE.id; })){
+      PERFIS_CACHE.unshift(CURRENT_PROFILE);
+    }
+  }catch(_){
+    PERFIS_CACHE = CURRENT_PROFILE ? [CURRENT_PROFILE] : [];
+  }
+}
+
+async function bootstrapAuth(){
+  try{
+    const sessionResult = await withTimeout(supabaseClient.auth.getSession(), 8000, 'Validação da sessão');
+    if(sessionResult.error) throw sessionResult.error;
+    const session = sessionResult.data && sessionResult.data.session ? sessionResult.data.session : null;
+
+    if(session && session.user){
+      await withTimeout(loadAuthenticatedProfile(session.user), 7000, 'Leitura do perfil');
+      await loadPerfisCache();
+      showAuthOverlay(false);
+      await withTimeout(initApp(), 12000, 'Carregamento do sistema');
+    }else{
+      showAuthOverlay(true);
+      updateUserUi();
+      var u = document.getElementById('login-username');
+      if(u) u.focus();
+    }
+  }catch(err){
+    console.error('Falha ao validar sessão:', err);
+    showAuthOverlay(true);
+    updateUserUi();
+    setAuthError(err && err.message ? err.message : 'Não foi possível validar a sessão.');
+  }
+}
+
+supabaseClient.auth.onAuthStateChange(function(event, session){
+  if(event === 'SIGNED_OUT'){
+    CURRENT_USER = null;
+    CURRENT_PROFILE = null;
+    updateUserUi();
+    showAuthOverlay(true);
+    return;
+  }
+
+  if(session && session.user){
+    setTimeout(function(){
+      loadAuthenticatedProfile(session.user)
+        .then(function(){ updateUserUi(); })
+        .catch(function(err){ console.error(err); });
+    }, 0);
+  }
+});
+
+async function openCollaboratorPasswordModal(id){
+  var p = (Array.isArray(PERFIS_CACHE) ? PERFIS_CACHE.find(function(item){ return item && item.id === id; }) : null);
+  if(!p) return;
+  CURRENT_PASSWORD_COLLABORATOR_ID = id;
+  CURRENT_EDIT = { type: 'col_password', id: id };
+  document.getElementById('modal-title').textContent = 'Alterar palavra-passe';
+  document.getElementById('modal-body').innerHTML = '<div class="form-grid">'+
+    '<div class="fg full"><label class="flabel">Colaborador</label><input class="finput" value="'+esc(p.nome || p.username || 'Colaborador')+'" disabled></div>' +
+    '<div class="fg full"><label class="flabel">Nova palavra-passe</label><input class="finput" id="f-col-password" type="password" placeholder="Mínimo 8 caracteres"></div>' +
+    '<div class="fg full"><label class="flabel">Confirmar palavra-passe</label><input class="finput" id="f-col-password-confirm" type="password" placeholder="Repita a nova palavra-passe"></div>' +
+    '<div class="fg full"><div class="guia-info"><strong>Segurança</strong>A palavra-passe será alterada directamente no acesso do colaborador. Use esta função apenas para acessos internos autorizados.</div></div>' +
+  '</div>';
+  setModalOpen(true);
+}
+
+async function saveCollaboratorPassword(){
+  if(!CURRENT_EDIT || CURRENT_EDIT.type !== 'col_password') return false;
+  var targetId = CURRENT_EDIT.id || CURRENT_PASSWORD_COLLABORATOR_ID;
+  var password = (document.getElementById('f-col-password') || { value: '' }).value;
+  var confirmPassword = (document.getElementById('f-col-password-confirm') || { value: '' }).value;
+
+  if(!password || password.length < 8){
+    alert('A nova palavra-passe deve ter pelo menos 8 caracteres.');
+    return false;
+  }
+
+  if(password !== confirmPassword){
+    alert('A confirmação da palavra-passe não coincide.');
+    return false;
+  }
+
+  var sessionResult = await supabaseClient.auth.getSession();
+  var accessToken = sessionResult && sessionResult.data && sessionResult.data.session ? sessionResult.data.session.access_token : '';
+  if(!accessToken){
+    throw new Error('Sessão expirada. Entre novamente para continuar.');
+  }
+
+  var response = await fetch(ADMIN_CHANGE_PASSWORD_API, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + accessToken
+    },
+    body: JSON.stringify({
+      profileId: targetId,
+      newPassword: password
+    })
+  });
+
+  var payload = null;
+  try{ payload = await response.json(); }catch(_){ payload = null; }
+
+  if(!response.ok){
+    throw new Error(payload && payload.error ? payload.error : 'Não foi possível alterar a palavra-passe.');
+  }
+
+  await logGenericAudit('auditoria_perfis', 'perfil_id', targetId, 'Palavra-passe redefinida', {
+    alteracoes: [
+      { campo: 'Palavra-passe', anterior: '—', novo: 'Redefinida internamente' }
+    ]
+  });
+
+  return true;
+}
+
+function openEditCollaborator(id){
+  var p = (Array.isArray(PERFIS_CACHE) ? PERFIS_CACHE.find(function(item){ return item && item.id === id; }) : null);
+  if(!p) return;
+  CURRENT_EDIT = { type: 'col', id: id };
+  document.getElementById('modal-title').textContent = 'Editar colaborador';
+  document.getElementById('modal-body').innerHTML = '<div class="form-grid">'+
+    '<div class="fg full"><label class="flabel">Nome</label><input class="finput" id="f-col-nome" value="'+esc(p.nome || '')+'" placeholder="Nome do colaborador"></div>'+
+    '<div class="fg"><label class="flabel">Utilizador</label><input class="finput" id="f-col-username" value="'+esc(p.username || '')+'" disabled></div>'+
+    '<div class="fg"><label class="flabel">Função</label><select class="fselect" id="f-col-funcao-edit">'+
+      '<option value="gestao_admin" '+((p.funcao||'')==='gestao_admin'?'selected':'')+'>Gestão / Administração</option>'+
+      '<option value="administrativo" '+((p.funcao||'')==='administrativo'?'selected':'')+'>Administrativo</option>'+
+      '<option value="administrativo_logistica" '+((p.funcao||'')==='administrativo_logistica'?'selected':'')+'>Administrativo / Logística</option>'+
+      '<option value="floral" '+((p.funcao||'')==='floral'?'selected':'')+'>Floral</option>'+
+      '<option value="entregas" '+((p.funcao||'')==='entregas'?'selected':'')+'>Entregas</option>'+
+      '<option value="design_interiores_logistica" '+((p.funcao||'')==='design_interiores_logistica'?'selected':'')+'>Design de Interiores / Logística</option>'+
+    '</select></div>'+
+    '<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-col-ativo-edit">'+
+      '<option value="1" '+(p.ativo===false?'':'selected')+'>Activo</option>'+
+      '<option value="0" '+(p.ativo===false?'selected':'')+'>Inactivo</option>'+
+    '</select></div>'+
+  '</div>';
+  setModalOpen(true);
+}
+
+async function saveCollaboratorProfile(){
+  if(!CURRENT_EDIT || CURRENT_EDIT.type !== 'col') return false;
+  const id = CURRENT_EDIT.id;
+  const nome = (document.getElementById('f-col-nome') || { value: '' }).value.trim();
+  const funcaoEl = document.getElementById('f-col-funcao-edit') || document.getElementById('f-col-funcao');
+  const ativoEl = document.getElementById('f-col-ativo-edit') || document.getElementById('f-col-ativo');
+  const funcao = (funcaoEl || { value: '' }).value;
+  const ativo = (ativoEl || { value: '1' }).value === '1';
+
+  if(!nome){
+    alert('Preencha o nome do colaborador.');
+    return false;
+  }
+
+  if(!funcao){
+    alert('Seleccione a função do colaborador.');
+    return false;
+  }
+
+  const { error } = await supabaseClient
+    .from('perfis')
+    .update({
+      nome: nome,
+      funcao: funcao,
+      ativo: ativo
+    })
+    .eq('id', id);
+
+  if(error) throw error;
+
+  const idx = PERFIS_CACHE.findIndex(function(item){ return item && item.id === id; });
+  if(idx > -1){
+    PERFIS_CACHE[idx] = Object.assign({}, PERFIS_CACHE[idx], {
+      nome: nome,
+      funcao: funcao,
+      ativo: ativo
+    });
+  }
+
+  if(CURRENT_PROFILE && CURRENT_PROFILE.id === id){
+    CURRENT_PROFILE = Object.assign({}, CURRENT_PROFILE, {
+      nome: nome,
+      funcao: funcao,
+      ativo: ativo
+    });
+    updateUserUi();
+  }
+
+  refreshAll();
+  return true;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+async function initApp(){
+  if(!CURRENT_USER || !CURRENT_PROFILE) return;
+  const d=new Date();
+  document.getElementById('nav-date').textContent=d.toLocaleDateString('pt-PT',{weekday:'short',day:'numeric',month:'short'});
+  DB = await withTimeout(loadDB(), 10000, 'Leitura dos dados');
+  refreshAll();
+  showPanel('dashboard');
+}
+bootstrapAuth().catch(function(err){
+  console.error('Falha na inicialização da autenticação:', err);
+  alert('A autenticação não conseguiu iniciar correctamente: ' + (err && err.message ? err.message : 'erro desconhecido'));
+});
+
+
+
+// --- PATCH v2.1: modal + table fixes ---
+function getActivePanel(){
+  const active=document.querySelector('.panel.active');
+  return active ? active.id.replace('panel-','') : 'dashboard';
+}
+function openNewModal(){
+  CURRENT_EDIT=null;
+  const panel=getActivePanel();
+  if(panel==='clientes') return openModalForType('cli');
+  if(panel==='colaboradores') return alert('A criação de novos acessos será ligada ao backend seguro no Vercel. Nesta fase, esta área gere perfis existentes.');
+  if(panel==='fornecedores') return openModalForType('forn');
+  if(panel==='orcamentos') return openModalForType('enc',{tipo:'Orçamento'});
+  if(panel==='floral') return openModalForType('enc',{temFloral:true,responsavelFloral:'Maria',estadoFloral:'Novo pedido'});
+  return openModalForType('enc');
+}
+function openEditModal(type,id){
+  closeDetail();
+  CURRENT_EDIT={type:type,id:id};
+  let data={};
+  if(type==='enc') data=getEnc(id)||{};
+  if(type==='cli') data=getCli(id)||{};
+  if(type==='forn') data=getForn(id)||{};
+  if(type==='col') data=(PERFIS_CACHE||[]).find(function(p){ return p.id===id; })||{};
+  openModalForType(type,data);
+}
+function setModalOpen(open){
+  document.getElementById('modal-overlay').classList.toggle('open', !!open);
+}
+function openModalForType(type, data){
+  data=data||{};
+  const cliOpts=DB.clientes.map(function(c){
+    return '<option value="'+c.id+'" '+(data.clienteId===c.id?'selected':'')+'>'+esc(c.nome)+'</option>';
+  }).join('');
+  const encOpts=DB.encomendas.map(function(e){
+    return '<option value="'+e.id+'" '+(data.encId===e.id?'selected':'')+'>'+esc(e.refXD)+'</option>';
+  }).join('');
+
+  if(type==='cli'){
+    document.getElementById('modal-title').textContent=CURRENT_EDIT?'Editar cliente':'Novo cliente';
+    document.getElementById('modal-body').innerHTML='<div class="form-grid">'+
+      '<div class="fg full"><label class="flabel">Nome</label><input class="finput" id="f-nome" value="'+esc(data.nome||'')+'" placeholder="Nome do cliente"></div>'+
+      '<div class="fg"><label class="flabel">Região</label><select class="fselect" id="f-regiao">'+
+        '<option '+((data.regiao||'Norte')==='Norte'?'selected':'')+'>Norte</option><option '+((data.regiao||'')==='Centro'?'selected':'')+'>Centro</option><option '+((data.regiao||'')==='Sul'?'selected':'')+'>Sul</option></select></div>'+
+      '<div class="fg"><label class="flabel">Tipo</label><select class="fselect" id="f-tipo"><option '+((data.tipo||'Normal')==='Normal'?'selected':'')+'>Normal</option><option '+((data.tipo||'')==='Crédito'?'selected':'')+'>Crédito</option></select></div>'+
+      '<div class="fg"><label class="flabel">Responsável</label><select class="fselect" id="f-resp"><option '+((data.responsavel||'Marlene')==='Marlene'?'selected':'')+'>Marlene</option><option '+((data.responsavel||'')==='Raquel'?'selected':'')+'>Raquel</option><option '+((data.responsavel||'')==='Tânia'?'selected':'')+'>Tânia</option><option '+((data.responsavel||'')==='Evylleen'?'selected':'')+'>Evylleen</option><option '+((data.responsavel||'')==='Maria'?'selected':'')+'>Maria</option><option '+((data.responsavel||'')==='Juliander'?'selected':'')+'>Juliander</option><option '+((data.responsavel||'')==='Helder'?'selected':'')+'>Helder</option></select></div>'+
+      '<div class="fg"><label class="flabel">Contacto</label><input class="finput" id="f-contacto" value="'+esc(data.contacto||'')+'" placeholder="9XX XXX XXX"></div>'+
+      '<div class="fg full"><label class="flabel">Morada</label><input class="finput" id="f-morada" value="'+esc(data.morada||'')+'" placeholder="Rua, nº, cidade"></div>'+
+      '</div>';
+  }
+
+  if(type==='forn'){
+    document.getElementById('modal-title').textContent=CURRENT_EDIT?'Editar pedido a fornecedor':'Novo pedido a fornecedor';
+    document.getElementById('modal-body').innerHTML='<div class="form-grid">'+
+      '<div class="fg"><label class="flabel">Fornecedor</label><input class="finput" id="f-forn" value="'+esc(data.fornecedor||'')+'" placeholder="Nome do fornecedor"></div>'+
+      '<div class="fg"><label class="flabel">Nº Ordem</label><input class="finput" id="f-ordem" value="'+esc(data.numOrdem||'')+'" placeholder="Ex: VO-2026-XXX"></div>'+
+      '<div class="fg"><label class="flabel">Tipo de pedido</label><select class="fselect" id="f-tipoPedidoForn" onchange="syncSupplierFields()"><option '+((supplierRequestType(data)||'Encomenda')==='Encomenda'?'selected':'')+'>Encomenda</option><option '+((supplierRequestType(data)||'')==='Orçamento'?'selected':'')+'>Orçamento</option></select></div>'+
+      '<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-estado-forn">'+
+        ['Aguarda confirmação','Confirmado','Pronto para levantar','Levantado','Entregue directo ao cliente'].map(function(s){return '<option '+((data.estado||'Aguarda confirmação')===s?'selected':'')+'>'+s+'</option>';}).join('')+
+      '</select></div>'+
+      '<div class="fg full"><label class="flabel">Descrição</label><textarea class="ftextarea" id="f-desc" placeholder="Artigos pedidos...">'+esc(data.descricao||'')+'</textarea></div>'+
+      '<div class="fg"><label class="flabel">Data pedido</label><input class="finput" type="date" id="f-datapedido" value="'+esc(data.dataPedido||'')+'"></div>'+
+      '<div class="fg"><label class="flabel">Limite de resposta</label><input class="finput" type="date" id="f-dataLimiteResposta" value="'+esc(data.dataLimiteResposta||'')+'"><div style="margin-top:6px;font-size:12px;color:var(--text3);">Obrigatório para pedidos do tipo Orçamento.</div></div>'+
+      '<div class="fg"><label class="flabel">Data levantar</label><input class="finput" type="date" id="f-datalevantar" value="'+esc(data.dataLevantar||'')+'"></div>'+
+      '<div class="fg"><label class="flabel">Encomenda associada</label><select class="fselect" id="f-enc"><option value="">—</option>'+encOpts+'</select></div>'+
+      '<div class="fg full"><label class="flabel">Morada fornecedor</label><input class="finput" id="f-morada" value="'+esc(data.morada||'')+'" placeholder="Morada de recolha"></div>'+
+      '<div class="fg"><label class="flabel">Entrega directa ao cliente?</label><select class="fselect" id="f-directa"><option value="0" '+(!data.entregaDirecta?'selected':'')+'>Não</option><option value="1" '+(data.entregaDirecta?'selected':'')+'>Sim</option></select></div>'+
+      '<div class="fg full"><label class="flabel">Anexos do projeto</label><input class="finput" type="file" id="f-anexos" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.dwg,.zip"><div style="margin-top:8px;font-size:12px;color:var(--text2);line-height:1.5;">Podes anexar projetos, renders, fichas técnicas e referências. Os ficheiros selecionados serão carregados automaticamente ao guardar este pedido.</div></div>'+
+      '</div>';
+  }
+
+
+if(type==='col'){
+  document.getElementById('modal-title').textContent='Editar colaborador';
+  document.getElementById('modal-body').innerHTML='<div class="form-grid">'+
+    '<div class="fg"><label class="flabel">Nome</label><input class="finput" id="f-col-nome" value="'+esc(data.nome||'')+'" placeholder="Nome completo"></div>'+
+    '<div class="fg"><label class="flabel">Utilizador</label><input class="finput" id="f-col-username" value="'+esc(data.username||'')+'" disabled></div>'+
+    '<div class="fg"><label class="flabel">Função</label><select class="fselect" id="f-col-funcao">'+
+      '<option value="gestao_admin" '+((data.funcao||'')==='gestao_admin'?'selected':'')+'>Gestão / Administração</option>'+
+      '<option value="administrativo" '+((data.funcao||'')==='administrativo'?'selected':'')+'>Administrativo</option>'+
+      '<option value="administrativo_logistica" '+((data.funcao||'')==='administrativo_logistica'?'selected':'')+'>Administrativo / Logística</option>'+
+      '<option value="floral" '+((data.funcao||'')==='floral'?'selected':'')+'>Floral</option>'+
+      '<option value="entregas" '+((data.funcao||'')==='entregas'?'selected':'')+'>Entregas</option>'+
+      '<option value="design_interiores_logistica" '+((data.funcao||'')==='design_interiores_logistica'?'selected':'')+'>Design de Interiores / Logística</option>'+
+    '</select></div>'+
+    '<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-col-ativo"><option value="1" '+(data.ativo!==false?'selected':'')+'>Activo</option><option value="0" '+(data.ativo===false?'selected':'')+'>Inactivo</option></select></div>'+
+    '<div class="fg full"><div class="guia-info"><strong>Nota</strong>Nesta fase, esta área gere o perfil operacional. A criação de novas contas e a redefinição de palavra-passe serão ligadas ao backend seguro no Vercel.</div></div>'+
+    '</div>';
+}
+
+  if(type==='enc'){
+    const tipoVal=data.tipo||'Encomenda';
+    const paymentOptions=PAYMENT_OPTIONS.map(function(opt){ return '<option '+((data.faturacao||'Pagar antes')===opt?'selected':'')+'>'+opt+'</option>'; }).join('');
+    const deliveryOptions=DELIVERY_OPTIONS.map(function(opt){ return '<option '+((data.entregador||'')===opt?'selected':'')+'>'+opt+'</option>'; }).join('');
+    document.getElementById('modal-title').textContent=CURRENT_EDIT?('Editar '+(tipoVal==='Orçamento'?'orçamento':(tipoVal==='Guia de transporte'?'guia de transporte':'encomenda'))):(tipoVal==='Orçamento'?'Novo orçamento':(tipoVal==='Guia de transporte'?'Nova guia de transporte':'Nova encomenda'));
+    document.getElementById('modal-body').innerHTML='<div class="form-grid">'+
+      '<div class="fg"><label class="flabel">Referência XD</label><input class="finput" id="f-refxd" value="'+esc(data.refXD||'')+'" placeholder="XD-2026-XXX"></div>'+
+      '<div class="fg"><label class="flabel">Tipo</label><select class="fselect" id="f-tipo"><option '+(tipoVal==='Encomenda'?'selected':'')+'>Encomenda</option><option '+(tipoVal==='Orçamento'?'selected':'')+'>Orçamento</option><option '+(tipoVal==='Guia de transporte'?'selected':'')+'>Guia de transporte</option></select></div>'+
+      '<div class="fg full"><label class="flabel">Cliente</label><select class="fselect" id="f-cli"><option value="">Seleccionar...</option>'+cliOpts+'</select></div>'+
+      '<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-estado-enc">'+STATE_FLOW.concat(['Cancelado']).map(function(s){return '<option '+((data.estado||'Novo')===s?'selected':'')+'>'+s+'</option>';}).join('')+'</select></div>'+
+      '<div class="fg"><label class="flabel">Responsável</label><select class="fselect" id="f-resp"><option '+((data.responsavel||'Marlene')==='Marlene'?'selected':'')+'>Marlene</option><option '+((data.responsavel||'')==='Raquel'?'selected':'')+'>Raquel</option><option '+((data.responsavel||'')==='Tânia'?'selected':'')+'>Tânia</option><option '+((data.responsavel||'')==='Evylleen'?'selected':'')+'>Evylleen</option><option '+((data.responsavel||'')==='Maria'?'selected':'')+'>Maria</option><option '+((data.responsavel||'')==='Juliander'?'selected':'')+'>Juliander</option><option '+((data.responsavel||'')==='Helder'?'selected':'')+'>Helder</option></select></div>'+
+      '<div class="fg"><label class="flabel">Faturação</label><select class="fselect" id="f-fat">'+paymentOptions+'</select></div>'+
+      '<div class="fg"><label class="flabel">Pagamento confirmado</label><select class="fselect" id="f-pag"><option value="0" '+(!data.pagConfirmado?'selected':'')+'>Não</option><option value="1" '+(data.pagConfirmado?'selected':'')+'>Sim</option></select></div>'+
+      '<div class="fg"><label class="flabel">Faturado</label><select class="fselect" id="f-faturado"><option value="0" '+(!data.faturado?'selected':'')+'>Não</option><option value="1" '+(data.faturado?'selected':'')+'>Sim</option></select></div>'+
+      '<div class="fg"><label class="flabel">Previsão entrega</label><input class="finput" type="date" id="f-data" value="'+esc(data.entrega||'')+'"></div>'+
+      '<div class="fg"><label class="flabel">Tipo de entrega</label><select class="fselect" id="f-entregador"><option value="">—</option>'+deliveryOptions+'</select></div>'+
+      '<div class="fg"><label class="flabel">Guia de transporte</label><select class="fselect" id="f-guia"><option value="0" '+(!data.guia?'selected':'')+'>Em falta</option><option value="1" '+(data.guia?'selected':'')+'>Feita</option></select></div>'+
+      '<div class="fg"><label class="flabel">N.º guia de transporte</label><input class="finput" id="f-numeroGuia" value="'+esc(data.numeroGuia||'')+'" placeholder="Ex: GT-2026-001"></div>'+
+      '<div class="fg"><label class="flabel">Localidade</label><input class="finput" id="f-localidade" value="'+esc(data.localidade||'')+'" placeholder="Ex: Porto, Braga"></div>'+
+      '<div class="fg full"><label class="flabel">Morada entrega</label><input class="finput" id="f-morada" value="'+esc(data.morada||'')+'" placeholder="Rua, nº, cidade"></div>'+
+      '<div class="fg full" style="margin-top:6px;padding-top:10px;border-top:1px solid var(--border);"><label class="flabel">Montagem</label></div>'+
+      '<div class="fg"><label class="flabel">Tem montagem?</label><select class="fselect" id="f-temMontagem"><option value="0" '+(!data.temMontagem?'selected':'')+'>Não</option><option value="1" '+(data.temMontagem?'selected':'')+'>Sim</option></select></div>'+
+      '<div class="fg"><label class="flabel">Data de montagem</label><input class="finput" type="date" id="f-dataMontagem" value="'+esc(data.dataMontagem||'')+'"></div>'+
+      '<div class="fg"><label class="flabel">Tipo de montagem</label><select class="fselect" id="f-tipoMontagem"><option value="">—</option><option '+((data.tipoMontagem||'')==='Árvores'?'selected':'')+'>Árvores</option><option '+((data.tipoMontagem||'')==='Tectos'?'selected':'')+'>Tectos</option><option '+((data.tipoMontagem||'')==='Instalação decorativa'?'selected':'')+'>Instalação decorativa</option><option '+((data.tipoMontagem||'')==='Montagem no local'?'selected':'')+'>Montagem no local</option><option '+((data.tipoMontagem||'')==='Desmontagem'?'selected':'')+'>Desmontagem</option><option '+((data.tipoMontagem||'')==='Outro'?'selected':'')+'>Outro</option></select></div>'+
+      '<div class="fg"><label class="flabel">Nº de pessoas</label><input class="finput" type="number" min="1" id="f-equipaMontagem" value="'+esc(data.equipaMontagem||'')+'" placeholder="Ex: 3"></div>'+
+      '<div class="fg"><label class="flabel">Bloquear agenda nesse dia?</label><select class="fselect" id="f-bloquearAgenda"><option value="0" '+(!data.bloquearAgenda?'selected':'')+'>Não</option><option value="1" '+(data.bloquearAgenda?'selected':'')+'>Sim</option></select></div>'+
+      '<div class="fg full"><label class="flabel">Notas de montagem</label><textarea class="ftextarea" id="f-notasMontagem" placeholder="Observações da montagem...">'+esc(data.notasMontagem||'')+'</textarea></div>'+
+      '<div class="fg full" style="margin-top:6px;padding-top:10px;border-top:1px solid var(--border);"><label class="flabel">Floral</label></div>'+
+      '<div class="fg"><label class="flabel">Inclui floral?</label><select class="fselect" id="f-temFloral" onchange="syncFloralFields()"><option value="0" '+(!data.temFloral?'selected':'')+'>Não</option><option value="1" '+(data.temFloral?'selected':'')+'>Sim</option></select></div>'+
+      '<div class="fg"><label class="flabel">Responsável floral</label><select class="fselect" id="f-responsavelFloral"><option value="">—</option><option '+((data.responsavelFloral||'Maria')==='Maria'?'selected':'')+'>Maria</option></select></div>'+
+      '<div class="fg"><label class="flabel">Estado floral</label><select class="fselect" id="f-estadoFloral"><option value="">—</option><option '+(((data.estadoFloral||'Novo pedido')==='Novo pedido')?'selected':'')+'>Novo pedido</option><option '+((data.estadoFloral||'')==='Em produção'?'selected':'')+'>Em produção</option><option '+((data.estadoFloral||'')==='Finalizado'?'selected':'')+'>Finalizado</option><option '+((data.estadoFloral||'')==='Pronto para entrega'?'selected':'')+'>Pronto para entrega</option></select></div>'+
+      '<div class="fg full"><div class="guia-info"><strong>Relação automática com o painel Floral</strong>Quando esta encomenda inclui floral, continua a existir apenas um registo principal. O pedido entra automaticamente no painel floral da Maria com estado próprio, sem abrir uma segunda entrada.</div></div>'+
+      '<div class="fg full"><label class="flabel">Notas</label><textarea class="ftextarea" id="f-notas" placeholder="Descrição do pedido...">'+esc(data.notas||'')+'</textarea></div>'+
+      '</div>';
+  }
+
+  setModalOpen(true);
+  if(type==='enc') syncFloralFields();
+  if(type==='forn') syncSupplierFields();
+}
+
+function formatRoleLabel(funcao){
+  const map = {
+    gestao_admin: 'Gestão / Administração',
+    administrativo: 'Administrativo',
+    administrativo_logistica: 'Administrativo / Logística',
+    floral: 'Floral',
+    entregas: 'Entregas',
+    design_interiores_logistica: 'Design de Interiores / Logística'
+  };
+  return map[funcao] || funcao || '—';
+}
+
+function getFilteredCollaborators(){
+  const q = (document.getElementById('s-col') || { value: '' }).value.trim().toLowerCase();
+  const funcao = (document.getElementById('f-col-funcao') || { value: '' }).value;
+  const estado = (document.getElementById('f-col-ativo') || { value: '' }).value;
+
+  return (Array.isArray(PERFIS_CACHE) ? PERFIS_CACHE : [])
+    .filter(function(p){ return p && p.username; })
+    .filter(function(p){
+      if(!funcao) return true;
+      return String(p.funcao || '') === funcao;
+    })
+    .filter(function(p){
+      if(!estado) return true;
+      if(estado === 'ativos') return p.ativo !== false;
+      if(estado === 'inativos') return p.ativo === false;
+      return true;
+    })
+    .filter(function(p){
+      if(!q) return true;
+      const hay = [
+        p.nome || '',
+        p.username || '',
+        p.funcao || ''
+      ].join(' ').toLowerCase();
+      return hay.indexOf(q) > -1;
+    })
+    .sort(function(a,b){
+      return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt');
+    });
+}
+
+function renderTable(type){
+
+  if(type==='enc'){
+    const rows=getFilteredEncRows();
+    document.getElementById('tb-enc').innerHTML=rows.length?rows.map(function(e){
+      const cli=getCli(e.clienteId);
+      const isGuia=e.estado==='Aguarda guia de transporte'&&!e.guia;
+      const checked=SELECTED_ENC_IDS.has(e.id) ? 'checked' : '';
+      return '<tr class="'+(isGuia?'guia-row':'')+'" onclick="openDetail(\'enc\',\''+e.id+'\')">'+
+        '<td class="table-check"><input type="checkbox" class="check-input" '+checked+' onclick="event.stopPropagation()" onchange="toggleOrderSelection(\''+e.id+'\', this.checked)"></td>'+
+        '<td class="mono">'+esc(e.refXD)+'</td>'+
+        '<td><strong>'+esc(cli.nome)+'</strong><br><span style="font-size:11px;color:var(--text3);">'+esc(cli.regiao)+'</span></td>'+
+        '<td>'+badge(e.tipo)+'</td>'+
+        '<td>'+badge(e.estado)+(isGuia?' <span style="font-size:10px;color:var(--amber);">▲ guia</span>':'')+'</td>'+
+        '<td>'+pagBadge(e.faturacao,e.pagConfirmado)+'</td>'+
+        '<td>'+(e.entregador?badge(e.entregador,'b-gray'):'<span style="color:var(--text3)">—</span>')+'</td>'+
+        '<td class="muted">'+fmtDate(e.entrega)+'</td>'+
+        '<td>'+responsaveisBadges(e)+'</td></tr>';
+    }).join(''):'<tr><td colspan="9" style="padding:30px;text-align:center;color:var(--text3);">Nenhuma encomenda encontrada</td></tr>';
+    refreshSelectionCounters();
+    return;
+  }
+
+  if(type==='orc'){
+    const rows=getFilteredOrcRows();
+    document.getElementById('tb-orc').innerHTML=rows.length?rows.map(function(e){
+      const cli=getCli(e.clienteId);
+      const checked=SELECTED_ENC_IDS.has(e.id) ? 'checked' : '';
+      return '<tr onclick="openDetail(\'enc\',\''+e.id+'\')">'+
+        '<td class="table-check"><input type="checkbox" class="check-input" '+checked+' onclick="event.stopPropagation()" onchange="toggleOrderSelection(\''+e.id+'\', this.checked)"></td>'+
+        '<td class="mono">'+esc(e.refXD)+'</td><td><strong>'+esc(cli.nome)+'</strong></td>'+
+        '<td>'+badge(e.estado)+'</td><td>'+responsaveisBadges(e)+'</td>'+
+        '<td>'+pagBadge(e.faturacao,e.pagConfirmado)+'</td><td class="muted">'+fmtDate(e.entrega)+'</td>'+
+        '<td class="muted" style="font-size:12px;">'+esc(e.morada||'—')+'</td></tr>';
+    }).join(''):'<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--text3);">Nenhum orçamento encontrado</td></tr>';
+    refreshSelectionCounters();
+    return;
+  }
+
+  if(type==='forn'){
+    const rows=getFilteredFornRows();
+    const atrasados=rows.filter(function(f){ return isSupplierQuoteOverdue(f); });
+    const alertEl=document.getElementById('alert-forn');
+    if(alertEl) alertEl.innerHTML=atrasados.length?'<div class="alert-banner danger">⚠ '+atrasados.length+' orçamento(s) de fornecedor ultrapassaram a data limite de resposta.</div>':'';
+    document.getElementById('tb-forn').innerHTML=rows.length?rows.map(function(f){
+      const enc=getEnc(f.encId);
+      const late=isSupplierQuoteOverdue(f);
+      return '<tr onclick="openDetail(\'forn\',\''+f.id+'\')">'+
+        '<td><strong>'+esc(f.fornecedor)+'</strong></td>'+
+        '<td>'+badge(supplierRequestType(f),(supplierRequestType(f)==='Orçamento'?'b-blue':'b-gray'))+'</td>'+
+        '<td class="mono">'+esc(f.numOrdem||'—')+'</td>'+
+        '<td class="muted">'+esc(f.descricao||'—')+'</td>'+
+        '<td>'+badge(f.estado||'Aguarda confirmação')+'</td>'+
+        '<td class="muted">'+fmtDate(f.dataPedido)+'</td>'+
+        '<td class="muted">'+fmtDate(f.dataLimiteResposta)+'</td>'+
+        '<td class="muted">'+fmtDate(f.dataLevantar)+'</td>'+
+        '<td class="mono">'+esc(enc?enc.refXD:'—')+'</td>'+
+        '<td>'+(late?badge('Atrasado','b-red'):badge('OK','b-green'))+'</td></tr>';
+    }).join(''):'<tr><td colspan="10" style="padding:30px;text-align:center;color:var(--text3);">Nenhum fornecedor encontrado</td></tr>';
+    return;
+  }
+
+  if(type==='ent'){
+    const rows=getFilteredEntRows();
+    const semPag=rows.filter(function(e){return !e.pagConfirmado&&e.faturacao==='Pagar antes';});
+    const alertEl=document.getElementById('alert-ent');
+    if(alertEl) alertEl.innerHTML=semPag.length?'<div class="alert-banner danger">⚠ '+semPag.length+' entrega(s) bloqueada(s) — aguardam pagamento.</div>':'';
+    document.getElementById('tb-ent').innerHTML=rows.length?rows.map(function(e){
+      const cli=getCli(e.clienteId);
+      const blocked=!e.pagConfirmado&&e.faturacao==='Pagar antes';
+      return '<tr onclick="openDetail(\'enc\',\''+e.id+'\')" class="'+(blocked?'blocked-row':'')+'">'+
+        '<td class="mono">'+esc(e.refXD)+'</td><td><strong>'+esc(cli.nome)+'</strong></td>'+
+        '<td>'+badge(e.estado)+'</td><td>'+pagBadge(e.faturacao,e.pagConfirmado)+'</td>'+
+        '<td>'+(e.pagConfirmado?badge('✓ Confirmado','b-green'):badge('Pendente','b-red'))+'</td>'+
+        '<td>'+(e.entregador?badge(e.entregador,'b-gray'):'—')+'</td>'+
+        '<td>'+(e.guia?badge('✓ Feita','b-green'):badge('Em falta','b-amber'))+'</td>'+
+        '<td class="muted" style="font-size:12px;">'+esc(e.morada||'—')+'</td></tr>';
+    }).join(''):'<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--text3);">Sem entregas activas</td></tr>';
+    return;
+  }
+
+  if(type==='nfat'){
+    const rows=getFilteredNfatRows();
+    document.getElementById('tb-nfat').innerHTML=rows.length?rows.map(function(e){
+      const cli=getCli(e.clienteId);
+      return '<tr onclick="openDetail(\'enc\',\''+e.id+'\')">'+
+        '<td class="mono">'+esc(e.refXD)+'</td>'+
+        '<td><strong>'+esc(cli.nome)+'</strong><br><span style="font-size:11px;color:var(--text3);">'+esc(e.localidade||cli.regiao||'—')+'</span></td>'+
+        '<td>'+badge(e.estado)+'</td>'+
+        '<td>'+faturadoBadge(e.faturado)+'</td>'+
+        '<td>'+pagBadge(e.faturacao,e.pagConfirmado)+'</td>'+
+        '<td>'+(e.entregador?badge(e.entregador,'b-gray'):'<span style="color:var(--text3)">—</span>')+'</td>'+
+        '<td class="muted">'+fmtDate(e.entrega)+'</td>'+
+        '<td>'+responsaveisBadges(e)+'</td></tr>';
+    }).join(''):'<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--text3);">Nenhuma encomenda entregue pendente de faturação</td></tr>';
+    return;
+  }
+
+  if(type==='fecho'){
+    const rows=getFilteredFechoRows();
+    renderFechoMetrics(rows);
+    document.getElementById('tb-fecho').innerHTML=rows.length?rows.map(function(e){
+      const cli=getCli(e.clienteId);
+      return '<tr onclick="openDetail(\'enc\',\''+e.id+'\')">'+
+        '<td class="mono">'+esc(e.refXD)+'</td>'+
+        '<td><strong>'+esc(cli.nome)+'</strong><br><span style="font-size:11px;color:var(--text3);">'+esc(e.localidade||cli.regiao||'—')+'</span></td>'+
+        '<td>'+badge(e.estado)+'</td>'+
+        '<td>'+pagBadge(e.faturacao,e.pagConfirmado)+'</td>'+
+        '<td>'+faturadoBadge(e.faturado)+'</td>'+
+        '<td>'+(e.guia?badge('✓ Feita','b-green'):badge('Em falta','b-amber'))+'</td>'+
+        '<td>'+(e.entregador?badge(e.entregador,'b-gray'):'<span style="color:var(--text3)">—</span>')+'</td>'+
+        '<td>'+(isFechoCompleto(e)?badge('Completo','b-green'):badge('Validar','b-amber'))+'</td></tr>';
+    }).join(''):'<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--text3);">Nenhum registo entregue e pago</td></tr>';
+    return;
+  }
+
+  if(type==='guia'){
+    const rows=DB.encomendas.filter(function(e){return e.estado==='Aguarda guia de transporte'&&!e.guia;});
+    document.getElementById('tb-guia').innerHTML=rows.length?rows.map(function(e){
+      const cli=getCli(e.clienteId);
+      const missingAddr=!e.morada;
+      const missingDrv=!e.entregador;
+      return '<tr>'+ 
+        '<td class="mono">'+esc(e.refXD)+'</td><td><strong>'+esc(cli.nome)+'</strong></td>'+
+        '<td>'+(e.entregador?badge(e.entregador,'b-gray'):'<span style="color:var(--red);font-weight:500;">⚠ Em falta</span>')+'</td>'+
+        '<td style="font-size:12px;">'+(e.morada?esc(e.morada):'<span style="color:var(--red);font-style:italic;">Em falta</span>')+'</td>'+
+        '<td>'+pagBadge(e.faturacao,e.pagConfirmado)+'</td><td class="muted">'+fmtDate(e.entrega)+'</td>'+
+        '<td class="muted" style="font-size:12px;">'+esc(e.notas||'—')+'</td>'+
+        '<td><button class="btn btn-success" style="padding:5px 10px;font-size:12px;" onclick="markGuia(\''+e.id+'\')" '+(missingAddr||missingDrv?'disabled title="Preencher morada e entregador primeiro"':'')+'>✓ Guia feita</button></td>'+
+        '</tr>';
+    }).join(''):'<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--text3);">Sem guias em falta — tudo em dia ✓</td></tr>';
+    return;
+  }
+
+  if(type==='col'){
+    const s=(document.getElementById('s-col')||{value:''}).value.toLowerCase();
+    const ff=(document.getElementById('f-col-funcao')||{value:''}).value;
+    const fa=(document.getElementById('f-col-ativo')||{value:''}).value;
+    const rows=(PERFIS_CACHE||[])
+      .filter(function(p){ return !ff || p.funcao===ff; })
+      .filter(function(p){ return !fa || (fa==='ativos' ? p.ativo!==false : p.ativo===false); })
+      .filter(function(p){
+        const hay=[p.nome,p.username,funcaoLabel(p.funcao)].join(' ').toLowerCase();
+        return !s || hay.includes(s);
+      });
+    document.getElementById('tb-col').innerHTML=rows.length?rows.map(function(p){
+      return '<tr onclick="openDetail(\'col\',\''+p.id+'\')">'+
+        '<td><strong>'+esc(p.nome||'—')+'</strong></td>'+
+        '<td class="mono">'+esc(p.username||'—')+'</td>'+
+        '<td>'+funcaoBadge(p.funcao)+'</td>'+
+        '<td>'+(p.ativo!==false?badge('Activo','b-green'):badge('Inactivo','b-red'))+'</td>'+
+        '<td class="muted">'+formatDateTime(p.created_at||'')+'</td></tr>';
+    }).join(''):'<tr><td colspan="5" style="padding:30px;text-align:center;color:var(--text3);">Nenhum colaborador encontrado</td></tr>';
+    return;
+  }
+
+  if(type==='cli'){
+    const s=(document.getElementById('s-cli')||{value:''}).value.toLowerCase();
+    const fr=(document.getElementById('f-cli-r')||{value:''}).value;
+    const rows=DB.clientes
+      .filter(function(c){ return !fr || c.regiao===fr; })
+      .filter(function(c){ return !s || String(c.nome||'').toLowerCase().includes(s) || String(c.contacto||'').toLowerCase().includes(s) || String(c.morada||'').toLowerCase().includes(s); });
+    document.getElementById('tb-cli').innerHTML=rows.length?rows.map(function(c){
+      const relacionados=DB.encomendas.filter(function(e){return e.clienteId===c.id && e.estado!=='Cancelado';}).length;
+      return '<tr onclick="openDetail(\'cli\',\''+c.id+'\')">'+
+        '<td><strong>'+esc(c.nome)+'</strong></td>'+
+        '<td>'+badge(c.regiao||'—','b-gray')+'</td>'+
+        '<td>'+badge(c.tipo||'Normal',(c.tipo||'Normal')==='Crédito'?'b-purple':'b-green')+'</td>'+
+        '<td>'+(c.responsavel?badge(c.responsavel,'b-blue'):'<span style="color:var(--text3)">—</span>')+'</td>'+
+        '<td class="muted">'+esc(c.contacto||'—')+'</td>'+
+        '<td class="muted" style="font-size:12px;">'+esc(c.morada||'—')+'</td>'+
+        '<td class="mono">'+relacionados+'</td></tr>';
+    }).join(''):'<tr><td colspan="7" style="padding:30px;text-align:center;color:var(--text3);">Nenhum cliente encontrado</td></tr>';
+    return;
+  }
+}
+
+
+// --- RESTORED INTERACTION AND ROUTE FUNCTIONS ---
+
+function normaliseLocalidade(v){
+  return String(v||'')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g,'')
+    .trim()
+    .replace(/\s+/g,' ')
+    .toLowerCase();
+}
+function clusterStops(stops){
+  const grouped={};
+  (stops||[]).forEach(function(stop){
+    const raw=stop.localidade || 'Sem localidade';
+    const key=normaliseLocalidade(raw) || 'sem-localidade';
+    if(!grouped[key]) grouped[key]={ main: raw, items: [] };
+    grouped[key].items.push(stop);
+  });
+  return Object.values(grouped).sort(function(a,b){
+    return String(a.main||'').localeCompare(String(b.main||''),'pt');
+  });
+}
+function transitionMinutes(prev, stop){
+  if(!prev) return 0;
+  const a=normaliseLocalidade(prev.localidade);
+  const b=normaliseLocalidade(stop.localidade);
+  if(a && b && a===b) return 12;
+  return 28;
+}
+function serviceMinutes(stop){
+  if(!stop) return 0;
+  if(stop.tipo==='forn') return 18;
+  if(stop.tipo==='montagem') return 90;
+  if(stop.temFloral || stop.tipo==='floral') return 30;
+  return 20;
+}
+function formatMinutes(total){
+  total = Number(total||0);
+  const h = Math.floor(total/60);
+  const m = total%60;
+  if(h && m) return h+'h '+m+'m';
+  if(h) return h+'h';
+  return m+' min';
+}
+
+function getEntryLocalidade(e){
+  return normaliseLocalidade(e.localidade || getCli(e.clienteId).regiao || 'Sem localidade');
+}
+
+function getFornecedorLocalidade(f){
+  return normaliseLocalidade(f.localidade || f.cidade || 'Sem localidade');
+}
+
+function collectRouteData(){
+  const prontas=DB.encomendas.filter(function(e){ return ['Pronto para entrega','Confirmado','Em rota'].includes(e.estado) && e.entregador; });
+  const fornLevantar=DB.fornecedores.filter(function(f){ return f.estado==='Pronto para levantar'; });
+  const todasRotas=[
+    {viatura:'Viatura 1',condutor:'Juliander',entregas:prontas.filter(function(e){return e.entregador==='Juliander' || e.entregador==='Juli';}),forn:fornLevantar.filter(function(_,i){return i%2===0;})},
+    {viatura:'Viatura 2',condutor:'Helder',entregas:prontas.filter(function(e){return e.entregador==='Helder';}),forn:fornLevantar.filter(function(_,i){return i%2===1;})},
+    {viatura:'CTT',condutor:'CTT',entregas:prontas.filter(function(e){return e.entregador==='CTT';}),forn:[]},
+  ];
+  return todasRotas.map(function(r){
+    const stops=[];
+    r.forn.forEach(function(f){
+      stops.push({
+        tipo:'forn', nome:'[Recolha] '+f.fornecedor, addr:f.morada, extra:f.numOrdem, blocked:false, pag:null, pagConf:true,
+        localidade:getFornecedorLocalidade(f), condutor:r.condutor, viatura:r.viatura
+      });
+    });
+    r.entregas.forEach(function(e){
+      const cli=getCli(e.clienteId);
+      const blocked=!e.pagConfirmado && e.faturacao==='Pagar antes';
+      stops.push({
+        tipo:e.temMontagem?'montagem':'entrega', nome:cli.nome, addr:e.morada, extra:e.refXD, blocked:blocked, pag:e.faturacao, pagConf:e.pagConfirmado,
+        localidade:getEntryLocalidade(e), condutor:r.condutor, viatura:r.viatura, estado:e.estado, equipa:e.equipaMontagem||0
+      });
+    });
+    return { viatura:r.viatura, condutor:r.condutor, stops:stops };
+  });
+}
+
+function populateRouteLocalidades(rotas){
+  const select=document.getElementById('f-rota-localidade');
+  if(!select) return;
+  const current=select.value;
+  const localidades=[];
+  rotas.forEach(function(r){ r.stops.forEach(function(s){ if(s.localidade && !localidades.includes(s.localidade)) localidades.push(s.localidade); }); });
+  localidades.sort(function(a,b){ return a.localeCompare(b,'pt'); });
+  select.innerHTML='<option value="">Todas as localidades</option>'+localidades.map(function(l){ return '<option value="'+esc(l)+'">'+esc(l)+'</option>'; }).join('');
+  if(localidades.includes(current)) select.value=current;
+}
+
+
+
+function buildSmartRoute(route){
+  const clusters=clusterStops(route.stops||[]);
+  const ordered=[];
+  clusters.forEach(function(c){ c.items.forEach(function(s){ ordered.push(s); }); });
+  let total=0, drive=0, service=0, prev=null;
+  ordered.forEach(function(stop){
+    const t=transitionMinutes(prev,stop); const s=serviceMinutes(stop);
+    drive+=t; service+=s; total+=t+s; prev=stop;
+  });
+  const zoneNames=clusters.map(function(c){ return c.main; }).filter(Boolean);
+  return { ordered:ordered, clusters:clusters, clusterCount:clusters.length, zoneNames:zoneNames, driveMinutes:drive, serviceMinutes:service, totalMinutes:total, totalKm:Math.round((drive/60)*38) };
+}
+
+function renderSmartPlan(route){
+  const plan=buildSmartRoute(route);
+  if(!plan.ordered.length) return '';
+  return '<div class="smart-plan">'+
+    '<div class="smart-head"><div><div class="smart-title">Sugestão automática de rota</div><div style="font-size:12px;color:var(--text2);margin-top:4px;">Agrupamento por proximidade e sequência inteligente para reduzir voltas desnecessárias.</div></div>'+badge(plan.clusterCount+' zona'+(plan.clusterCount!==1?'s':''),'b-blue')+'</div>'+
+    '<div class="smart-kpis">'+badge('Tempo estimado: '+formatMinutes(plan.totalMinutes),'b-green')+' '+badge('Condução: '+formatMinutes(plan.driveMinutes),'b-gray')+' '+badge('Serviço: '+formatMinutes(plan.serviceMinutes),'b-amber')+' '+badge('Distância estimada: ~'+plan.totalKm+' km','b-purple')+'</div>'+
+    '<div style="font-size:12px;color:var(--text2);margin-bottom:10px;">Ordem sugerida por zona: '+esc(plan.zoneNames.join(' → ')||'Sem zona definida')+'</div>'+
+    '<div class="smart-order">'+plan.ordered.map(function(s,i){
+      const tipoBadge=s.tipo==='forn' ? badge('Recolha','b-blue') : s.tipo==='montagem' ? badge('Montagem','b-purple') : badge('Entrega','b-green');
+      const eta=formatMinutes(transitionMinutes(i?plan.ordered[i-1]:null,s)+serviceMinutes(s));
+      return '<div class="smart-stop"><div class="smart-num">'+(i+1)+'</div><div class="smart-stop-main"><div class="smart-stop-top"><div class="smart-stop-name">'+esc(s.nome)+'</div><div style="font-size:11px;color:var(--text2);">'+eta+'</div></div><div class="smart-stop-sub">'+esc((s.localidade||'Sem localidade')+' · '+(s.addr||'Morada por confirmar'))+'</div><div class="smart-stop-tags">'+tipoBadge+' '+badge(s.extra,'b-gray')+' '+badge(s.condutor||route.condutor,'b-gray')+(s.blocked?' '+badge('Bloqueado','b-red'):'')+'</div></div></div>';
+    }).join('')+'</div></div>';
+}
+
+
+
+
+async function advanceState(id){
+  const e=getEnc(id); if(!e) return;
+  if(e.estado==='Aguarda guia de transporte'&&!e.guia) return;
+  const anterior = e.estado;
+  const ci=STATE_FLOW.indexOf(e.estado);
+  if(ci>=0&&ci<STATE_FLOW.length-1){
+    e.estado=STATE_FLOW[ci+1];
+    if(CURRENT_USER) e.updatedBy = CURRENT_USER.id;
+    await saveAndRefresh();
+    await logOrderAudit(id, 'Estado alterado', {
+      alteracoes: [
+        { campo: 'Estado', anterior: anterior || '—', novo: e.estado || '—' }
+      ]
+    });
+  }
+  closeDetail();
+}
+
+async function advanceFornState(id){
+  const f=getForn(id); if(!f) return;
+  const anterior = f.estado;
+  const ci=FORN_FLOW.indexOf(f.estado);
+  if(ci>=0&&ci<FORN_FLOW.length-1){
+    f.estado=FORN_FLOW[ci+1];
+    if(CURRENT_USER) f.updatedBy = CURRENT_USER.id;
+    await saveAndRefresh();
+    await logGenericAudit('auditoria_fornecedores', 'fornecedor_id', id, 'Estado do fornecedor alterado', {
+      alteracoes: [
+        { campo: 'Estado', anterior: anterior || '—', novo: f.estado || '—' }
+      ]
+    });
+  }
+  closeDetail();
+}
+
+function getAgendaBlocksByDate(iso){
+  if(!iso) return [];
+  return DB.encomendas.filter(function(e){
+    return e && e.temMontagem && e.dataMontagem===iso && e.bloquearAgenda && e.estado!=='Cancelado';
+  });
+}
+
+function buildAgendaBlockedMessage(iso, actionLabel){
+  const blocks=getAgendaBlocksByDate(iso);
+  if(!blocks.length) return '';
+  const refs=blocks.slice(0,3).map(function(e){ return e.refXD||e.id; }).join(', ');
+  const extra=blocks.length>3 ? ' +' + (blocks.length-3) + ' registo(s)' : '';
+  return 'Este dia está bloqueado por montagem com equipa alargada. Não é possível marcar '+actionLabel+' em '+fmtDate(iso)+'. Bloqueio associado a: '+refs+extra+'.';
+}
+
+
+function deleteRecord(type,id){
+  let msg='Tem a certeza que quer eliminar este registo?';
+  if(type==='cli'){
+    const ligados=DB.encomendas.filter(function(e){return e.clienteId===id;}).length;
+    if(ligados>0){
+      alert('Este cliente está associado a '+ligados+' encomenda(s) / orçamento(s). Remova ou altere essas ligações antes de eliminar.');
+      return;
+    }
+    msg='Eliminar este cliente?';
+  }
+  if(type==='enc') msg='Eliminar esta encomenda / orçamento?';
+  if(type==='forn') msg='Eliminar este pedido a fornecedor?';
+  if(!confirm(msg)) return;
+
+  if(type==='cli') DB.clientes = DB.clientes.filter(function(c){return c.id!==id;});
+  if(type==='enc') DB.encomendas = DB.encomendas.filter(function(e){return e.id!==id;});
+  if(type==='forn') DB.fornecedores = DB.fornecedores.filter(function(f){return f.id!==id;});
+  persistDB().then(async function(){
+  
+if(type==='col'){
+  document.getElementById('modal-title').textContent='Editar colaborador';
+  document.getElementById('modal-body').innerHTML='<div class="form-grid">'+
+    '<div class="fg"><label class="flabel">Nome</label><input class="finput" id="f-col-nome" value="'+esc(data.nome||'')+'" placeholder="Nome completo"></div>'+
+    '<div class="fg"><label class="flabel">Utilizador</label><input class="finput" id="f-col-username" value="'+esc(data.username||'')+'" disabled></div>'+
+    '<div class="fg"><label class="flabel">Função</label><select class="fselect" id="f-col-funcao">'+
+      '<option value="gestao_admin" '+((data.funcao||'')==='gestao_admin'?'selected':'')+'>Gestão / Administração</option>'+
+      '<option value="administrativo" '+((data.funcao||'')==='administrativo'?'selected':'')+'>Administrativo</option>'+
+      '<option value="administrativo_logistica" '+((data.funcao||'')==='administrativo_logistica'?'selected':'')+'>Administrativo / Logística</option>'+
+      '<option value="floral" '+((data.funcao||'')==='floral'?'selected':'')+'>Floral</option>'+
+      '<option value="entregas" '+((data.funcao||'')==='entregas'?'selected':'')+'>Entregas</option>'+
+      '<option value="design_interiores_logistica" '+((data.funcao||'')==='design_interiores_logistica'?'selected':'')+'>Design de Interiores / Logística</option>'+
+    '</select></div>'+
+    '<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-col-ativo"><option value="1" '+(data.ativo!==false?'selected':'')+'>Activo</option><option value="0" '+(data.ativo===false?'selected':'')+'>Inactivo</option></select></div>'+
+    '<div class="fg full"><div class="guia-info"><strong>Nota</strong>Nesta fase, esta área gere o perfil operacional. A criação de novas contas e a redefinição de palavra-passe serão ligadas ao backend seguro no Vercel.</div></div>'+
+    '</div>';
+}
+
+  if(type==='enc'){
+      await logOrderAudit(id, 'Encomenda eliminada', { referencia: id });
+    }
+  });
+  closeDetail();
+  refreshAll();
+}
+
+
+
+// --- PATCH v2.2: missing operational functions + número de guia ---
+function closeDetail(){
+  document.getElementById('detail').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+function renderStatusFlow(current){
+  return '<div class="sf">'+STATE_FLOW.map(function(s){
+    var cls='sf-s';
+    if(s===current) cls+=' current';
+    else if(STATE_FLOW.indexOf(s)<STATE_FLOW.indexOf(current)) cls+=' done';
+    return '<div class="'+cls+'">'+esc(s)+'</div>';
+  }).join('')+'</div>';
+}
+function getBlockedDayInfo(iso){
+  return DB.encomendas.find(function(e){
+    return e.temMontagem && e.dataMontagem===iso && e.bloquearAgenda && e.estado!=='Cancelado';
+  }) || null;
+}
+function findNextAvailableDate(fromIso){
+  if(!fromIso) return '';
+  var d=new Date(fromIso+'T00:00:00');
+  if(Number.isNaN(d.getTime())) return '';
+  for(var i=1;i<=45;i++){
+    d.setDate(d.getDate()+1);
+    var iso=toISODate(d);
+    if(!getBlockedDayInfo(iso)) return iso;
+  }
+  return '';
+}
+function assertAgendaAvailable(iso, label){
+  var blocked=getBlockedDayInfo(iso);
+  if(!blocked) return true;
+  var next=findNextAvailableDate(iso);
+  var msg='Este dia está bloqueado por montagem com equipa alargada e não está disponível para '+label+'.';
+  if(next) msg += '\nPróxima data disponível: '+fmtDate(next);
+  alert(msg);
+  return false;
+}
+async function markGuia(id){
+  var e=getEnc(id);
+  if(!e) return;
+  var numeroAnterior = e.numeroGuia || '';
+  if(!e.numeroGuia){
+    var numero=prompt('Indique o N.º da guia de transporte para '+(e.refXD||id)+':', e.numeroGuia||'');
+    if(!numero) return;
+    e.numeroGuia=String(numero).trim();
+  }
+  e.guia=true;
+  if(CURRENT_USER) e.updatedBy = CURRENT_USER.id;
+  if(e.estado==='Aguarda guia de transporte') e.estado='Pronto para entrega';
+  await saveAndRefresh();
+  await logOrderAudit(id, 'Guia de transporte marcada', {
+    alteracoes: [
+      { campo: 'Guia de transporte', anterior: 'Em falta', novo: 'Feita' },
+      { campo: 'N.º da guia', anterior: numeroAnterior || '—', novo: e.numeroGuia || '—' }
+    ]
+  });
+}
+function openDetail(type,id){
+  var body='';
+  var footer='<button class="btn btn-ghost" onclick="closeDetail()">Fechar</button>';
+
+  if(type==='enc'){
+    var e=getEnc(id); if(!e) return;
+    var cli=getCli(e.clienteId);
+    var isGuia=(e.estado==='Aguarda guia de transporte' && !e.guia);
+    var pagBlock=!e.pagConfirmado && e.faturacao==='Pagar antes' && e.estado==='Pronto para entrega';
+    var canAdvance=!isGuia && STATE_FLOW.indexOf(e.estado||'Novo')<STATE_FLOW.length-1;
+    document.getElementById('dp-title').textContent=(e.tipo||'Encomenda')+' — '+(cli.nome||'Sem cliente');
+    document.getElementById('dp-ref').textContent=(e.refXD||e.id);
+    body += renderStatusFlow(e.estado||'Novo');
+    if(e.estado==='Aguarda guia de transporte' || e.guia || e.numeroGuia){
+      body += '<div class="guia-info"><strong>Guia de transporte</strong>'
+        + '<br>Estado: ' + (e.guia ? '<span style="color:var(--green);">Feita</span>' : '<span class="missing">Em falta</span>')
+        + '<br>N.º da guia: ' + (e.numeroGuia ? esc(e.numeroGuia) : '<span class="missing">por preencher</span>')
+        + '</div>';
+    }
+    body += dsec('Dados principais',
+      drow('Tipo', badge(e.tipo||'—'))+
+      drow('Estado', badge(e.estado||'—'))+
+      drow('Cliente', esc(cli.nome||'—'))+
+      drow('Responsável', responsaveisBadges(e)||'—')+
+      drow('Faturação', pagBadge(e.faturacao,e.pagConfirmado))+
+      drow('Faturado', faturadoBadge(!!e.faturado))+
+      drow('Entregador', e.entregador?badge(e.entregador,'b-gray'):'—')+
+      drow('Entrega prevista', fmtDate(e.entrega))+
+      drow('Localidade', esc(e.localidade||'—'))+
+      drow('Morada', esc(e.morada||'—'))
+    );
+    if(e.temMontagem){
+      body += dsec('Montagem',
+        drow('Data de montagem', fmtDate(e.dataMontagem))+
+        drow('Tipo de montagem', esc(e.tipoMontagem||'—'))+
+        drow('Equipa', esc(e.equipaMontagem||'—'))+
+        drow('Bloqueia agenda', e.bloquearAgenda?badge('Sim','b-red'):badge('Não','b-green'))+
+        drow('Notas', esc(e.notasMontagem||'—'))
+      );
+    }
+    if(e.temFloral){
+      body += dsec('Floral',
+        drow('Responsável floral', esc(e.responsavelFloral||'Maria'))+
+        drow('Estado floral', badge(e.estadoFloral||'Novo pedido','b-blue'))
+      );
+    }
+    body += dsec('Notas', '<div style="font-size:13px;line-height:1.6;color:var(--text2);">'+esc(e.notas||'—')+'</div>');
+    body += '<div class="dsec"><div class="dsec-title">Histórico</div><div id="order-history-loading" style="font-size:13px;color:var(--text3);">A carregar histórico...</div></div>';
+    body += renderAuditSection(e);
+    footer += '<button class="btn btn-ghost" onclick="openEditModal(\'enc\',\''+e.id+'\')">Editar</button>';
+    footer += '<button class="btn btn-ghost" onclick="deleteRecord(\'enc\',\''+e.id+'\')">Eliminar</button>';
+    if(isGuia){
+      footer += '<button class="btn btn-success" onclick="markGuia(\''+e.id+'\')">✓ Guia feita</button>';
+    }
+    footer += '<button class="btn btn-primary" onclick="advanceState(\''+e.id+'\')" '+(canAdvance && !pagBlock ? '' : 'disabled title="'+(isGuia?'Guia em falta':(pagBlock?'Aguarda pagamento':'Sem próximo estado'))+'"')+'>Avançar pedido →</button>';
+    setTimeout(async function(){
+      var mount = document.getElementById('order-history-loading');
+      if(!mount) return;
+      var history = await loadAuditHistoryForOrder(e.id);
+      mount.outerHTML = renderOrderHistory(history);
+    }, 0);
+  } else if(type==='forn'){
+    var f=getForn(id); if(!f) return;
+    var enc=getEnc(f.encId);
+    var canAdvanceF=FORN_FLOW.indexOf(f.estado||'Aguarda confirmação')<FORN_FLOW.length-1;
+    document.getElementById('dp-title').textContent=f.fornecedor||'Fornecedor';
+    document.getElementById('dp-ref').textContent=f.numOrdem||f.id;
+    body += dsec('Fornecedor',
+      drow('Tipo de pedido', badge(supplierRequestType(f), supplierRequestType(f)==='Orçamento'?'b-blue':'b-gray'))+
+      drow('Estado', badge(f.estado||'Aguarda confirmação'))+
+      drow('Data pedido', fmtDate(f.dataPedido))+
+      drow('Limite resposta', fmtDate(f.dataLimiteResposta))+
+      drow('Levantar em', fmtDate(f.dataLevantar))+
+      drow('Ligação', enc?esc(enc.refXD):'—')+
+      drow('Morada', esc(f.morada||'—'))+
+      drow('Descrição', esc(f.descricao||'—'))
+    );
+    body += dsec('Anexos do projeto', supplierAttachmentsHtml(f));
+    body += '<div class="dsec"><div class="dsec-title">Histórico</div><div id="supplier-history-loading" style="font-size:13px;color:var(--text3);">A carregar histórico...</div></div>';
+    body += renderAuditSection(f);
+    footer += '<button class="btn btn-ghost" onclick="uploadSupplierAttachment(\''+f.id+'\')">Adicionar anexo</button>';
+    footer += '<button class="btn btn-ghost" onclick="openEditModal(\'forn\',\''+f.id+'\')">Editar</button>';
+    footer += '<button class="btn btn-ghost" onclick="deleteRecord(\'forn\',\''+f.id+'\')">Eliminar</button>';
+    footer += '<button class="btn btn-primary" onclick="advanceFornState(\''+f.id+'\')" '+(canAdvanceF?'':'disabled title="Sem próximo estado"')+'>Avançar pedido →</button>';
+    setTimeout(async function(){
+      var mount = document.getElementById('supplier-history-loading');
+      if(!mount) return;
+      var history = await loadAuditHistory('auditoria_fornecedores', 'fornecedor_id', f.id);
+      mount.outerHTML = renderGenericHistory(history);
+    }, 0);
+  } else if(type==='cli'){
+    var c=getCli(id); if(!c) return;
+    var rel=DB.encomendas.filter(function(e){ return e.clienteId===c.id && e.estado!=='Cancelado'; });
+    document.getElementById('dp-title').textContent=c.nome||'Cliente';
+    document.getElementById('dp-ref').textContent=c.id;
+    body += dsec('Cliente',
+      drow('Região', badge(c.regiao||'—','b-gray'))+
+      drow('Tipo', badge(c.tipo||'Normal', (c.tipo||'Normal')==='Crédito'?'b-purple':'b-green'))+
+      drow('Responsável', c.responsavel?badge(c.responsavel,'b-blue'):'—')+
+      drow('Contacto', esc(c.contacto||'—'))+
+      drow('Morada', esc(c.morada||'—'))+
+      drow('Pedidos activos', String(rel.length))
+    );
+    body += '<div class="dsec"><div class="dsec-title">Histórico</div><div id="client-history-loading" style="font-size:13px;color:var(--text3);">A carregar histórico...</div></div>';
+    body += renderAuditSection(c);
+    footer += '<button class="btn btn-ghost" onclick="openEditModal(\'cli\',\''+c.id+'\')">Editar</button>';
+    footer += '<button class="btn btn-ghost" onclick="deleteRecord(\'cli\',\''+c.id+'\')">Eliminar</button>';
+    setTimeout(async function(){
+      var mount = document.getElementById('client-history-loading');
+      if(!mount) return;
+      var history = await loadAuditHistory('auditoria_clientes', 'cliente_id', c.id);
+      mount.outerHTML = renderGenericHistory(history);
+    }, 0);
+  } else if(type==='col'){
+    var p=(PERFIS_CACHE||[]).find(function(x){ return x.id===id; });
+    if(!p) return;
+    document.getElementById('dp-title').textContent=p.nome||'Colaborador';
+    document.getElementById('dp-ref').textContent=p.username||p.id;
+    body += dsec('Perfil',
+      drow('Nome', esc(p.nome||'—'))+
+      drow('Utilizador', esc(p.username||'—'))+
+      drow('Função', funcaoBadge(p.funcao))+
+      drow('Estado', p.ativo!==false?badge('Activo','b-green'):badge('Inactivo','b-red'))+
+      drow('Criado em', formatDateTime(p.created_at||''))+
+      drow('ID', esc(shortId(p.id||'')))
+    );
+    body += '<div class="guia-info"><strong>Gestão de acesso</strong>Esta área já permite editar função, activar/desactivar perfis e redefinir a palavra-passe a partir do backend seguro.</div>';
+    footer += '<button class="btn btn-ghost" onclick="openCollaboratorPasswordModal(\''+p.id+'\')">Alterar palavra-passe</button>';
+    footer += '<button class="btn btn-ghost" onclick="openEditCollaborator(\''+p.id+'\')">Editar</button>';
+  } else {
+    return;
+  }
+  document.getElementById('dp-body').innerHTML=body;
+  document.getElementById('dp-footer').innerHTML=footer;
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('detail').classList.add('open'); }, 10);
+}
+function getTodayRouteRows(){
+  return DB.encomendas.filter(function(e){
+    return e.entrega && e.estado!=='Entregue' && e.estado!=='Cancelado' && e.entregador;
+  });
+}
+function setRouteView(view){
+  ROUTE_VIEW=view;
+  document.getElementById('btn-route-view-rotas').className='btn '+(view==='rotas'?'btn-primary':'btn-ghost');
+  document.getElementById('btn-route-view-zonas').className='btn '+(view==='zonas'?'btn-primary':'btn-ghost');
+  renderRotas();
+}
+function toggleSmartRoutes(){
+  ROUTE_SMART=!ROUTE_SMART;
+  document.getElementById('btn-route-smart').className='btn '+(ROUTE_SMART?'btn-primary':'btn-ghost');
+  renderRotas();
+}
+function routeWeight(localidade){
+  localidade=String(localidade||'').toLowerCase();
+  var order=['porto','matosinhos','maia','gaia','braga','guimarães','aveiro','viseu'];
+  var idx=order.indexOf(localidade);
+  return idx===-1 ? 999 : idx;
+}
+function renderRotas(){
+  var mount=document.getElementById('route-grid');
+  if(!mount) return;
+  var viatura=(document.getElementById('f-rota-v')||{value:''}).value;
+  var localidade=(document.getElementById('f-rota-localidade')||{value:''}).value;
+  var rows=getTodayRouteRows().filter(function(e){
+    return (!viatura || deliveryVehicleLabel(e.entregador)===viatura) && (!localidade || (e.localidade||'')===localidade);
+  });
+  var routeData=collectRouteData();
+  var localSelect=document.getElementById('f-rota-localidade');
+  if(localSelect){
+    populateRouteLocalidades(routeData);
+    if(localidade) localSelect.value=localidade;
+  }
+  if(ROUTE_SMART){
+    rows.sort(function(a,b){
+      var wa=routeWeight(a.localidade), wb=routeWeight(b.localidade);
+      if(wa!==wb) return wa-wb;
+      return String(a.entrega||'').localeCompare(String(b.entrega||'')) || String(getCli(a.clienteId).nome).localeCompare(String(getCli(b.clienteId).nome));
+    });
+  }
+  if(ROUTE_VIEW==='zonas'){
+    var grouped={};
+    rows.forEach(function(e){
+      var key=e.localidade||'Sem localidade';
+      grouped[key]=grouped[key]||[];
+      grouped[key].push(e);
+    });
+    var keys=Object.keys(grouped).sort(function(a,b){
+      return grouped[b].length-grouped[a].length || a.localeCompare(b);
+    });
+    mount.className='zone-grid';
+    mount.innerHTML=keys.length ? keys.map(function(k){
+      var list=grouped[k];
+      var entregas=list.filter(function(e){ return e.estado!=='Confirmado'; }).length;
+      var montagens=list.filter(function(e){ return e.temMontagem; }).length;
+      return '<div class="zc"><div class="zc-hdr"><h3>'+esc(k)+'</h3><div class="zc-meta">'+list.length+' serviço(s)</div></div>'
+        + '<div class="zc-body"><div class="zone-metrics">'
+        + badge(entregas+' entrega(s)','b-blue')
+        + badge(montagens+' montagem(ns)','b-purple')
+        + '</div><div class="zone-list">'
+        + list.map(function(e){
+          var cli=getCli(e.clienteId);
+          return '<div class="zone-item" onclick="openDetail(\'enc\',\''+e.id+'\')">'
+            + '<div class="zone-item-head"><div><div class="zone-item-name">'+esc(cli.nome||e.refXD)+'</div><div class="zone-item-sub">'+esc(e.refXD||'—')+' · '+fmtDate(e.entrega)+'</div></div>'
+            + '<div>'+(e.entregador?badge(e.entregador,'b-gray'):'')+'</div></div>'
+            + '<div class="zone-item-tags">'+badge(e.estado||'—')+(e.temMontagem?badge('Montagem','b-purple'):'')+'</div></div>';
+        }).join('') + '</div></div></div>';
+    }).join('') : '<div class="calendar-empty">Sem rotas para os filtros selecionados.</div>';
+  } else {
+    var groupedByVehicle={};
+    rows.forEach(function(e){
+      var key=deliveryVehicleLabel(e.entregador);
+      groupedByVehicle[key]=groupedByVehicle[key]||[];
+      groupedByVehicle[key].push(e);
+    });
+    var vKeys=Object.keys(groupedByVehicle);
+    mount.className='route-grid';
+    mount.innerHTML=vKeys.length ? vKeys.map(function(v){
+      var list=groupedByVehicle[v];
+      var distancia=list.length*12;
+      var conducao=list.length*18;
+      var servico=list.reduce(function(sum,e){ return sum + (e.temMontagem ? 90 : (e.temFloral ? 30 : 20)); }, 0);
+      return '<div class="rc"><div class="rc-hdr"><h3>'+esc(v)+'</h3><div class="rhs">'+list.length+' paragens · '+distancia+' km · '+(conducao+servico)+' min</div></div>'
+        + list.map(function(e,idx){
+          var cli=getCli(e.clienteId);
+          return '<div class="rs" onclick="openDetail(\'enc\',\''+e.id+'\')">'
+            + '<div class="rs-dot '+(e.temMontagem?'blocked':'ok')+'">'+(idx+1)+'</div>'
+            + '<div class="rs-info"><div class="rs-name">'+esc(cli.nome||'—')+'</div><div class="rs-addr">'+esc((e.localidade||'—')+' · '+(e.morada||'Sem morada'))+'</div>'
+            + '<div class="rs-tags">'+badge(e.estado||'—')+(e.temMontagem?badge('Montagem','b-purple'):'')+(e.temFloral?badge('Floral','b-blue'):'')+'</div></div></div>';
+        }).join('') + '</div>';
+    }).join('') : '<div class="calendar-empty">Sem rotas para os filtros selecionados.</div>';
+  }
+}
+function deliveryVehicleLabel(entregador){
+  if(entregador==='Juliander' || entregador==='Juli') return 'Viatura 1';
+  if(entregador==='Helder') return 'Viatura 2';
+  if(entregador==='Cliente levanta no showroom') return 'Showroom';
+  return entregador||'Sem viatura';
+}
+
+document.addEventListener('keydown', function(event){
+  var overlay = document.getElementById('auth-overlay');
+  if(overlay && overlay.classList.contains('open') && event.key === 'Enter'){
+    event.preventDefault();
+    loginWithUsername();
+  }
+});
+
+</script>
+</body>
+</html>
