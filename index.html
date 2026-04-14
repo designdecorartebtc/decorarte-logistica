@@ -2516,7 +2516,7 @@ async function loadPerfisCache(){
     const result = await withTimeout(
       supabaseClient
         .from('perfis')
-        .select('id, username, nome, funcao, ativo, created_at')
+        .select('*')
         .order('nome', { ascending: true }),
       5000,
       'Leitura dos perfis'
@@ -2537,6 +2537,17 @@ async function loadPerfisCache(){
   }catch(_){
     PERFIS_CACHE = CURRENT_PROFILE ? [CURRENT_PROFILE] : [];
   }
+}
+
+function resolveCollaboratorAuthUserId(profile){
+  if(!profile || typeof profile !== 'object') return '';
+  return String(
+    profile.user_id ||
+    profile.auth_user_id ||
+    profile.auth_uid ||
+    profile.id ||
+    ''
+  ).trim();
 }
 
 async function bootstrapAuth(){
@@ -2599,9 +2610,20 @@ async function openCollaboratorPasswordModal(id){
 
 async function saveCollaboratorPassword(){
   if(!CURRENT_EDIT || CURRENT_EDIT.type !== 'col_password') return false;
-  var targetId = CURRENT_EDIT.id || CURRENT_PASSWORD_COLLABORATOR_ID;
+
+  var profileId = CURRENT_EDIT.id || CURRENT_PASSWORD_COLLABORATOR_ID;
+  var profile = (Array.isArray(PERFIS_CACHE) ? PERFIS_CACHE.find(function(item){ return item && item.id === profileId; }) : null);
+  var authUserId = resolveCollaboratorAuthUserId(profile);
   var password = (document.getElementById('f-col-password') || { value: '' }).value;
   var confirmPassword = (document.getElementById('f-col-password-confirm') || { value: '' }).value;
+
+  if(!profileId){
+    throw new Error('Não foi possível identificar o colaborador seleccionado.');
+  }
+
+  if(!authUserId){
+    throw new Error('Este colaborador não tem um utilizador Auth associado. Confirme se o perfil está ligado ao auth.uid no Supabase.');
+  }
 
   if(!password || password.length < 8){
     alert('A nova palavra-passe deve ter pelo menos 8 caracteres.');
@@ -2626,8 +2648,13 @@ async function saveCollaboratorPassword(){
       'Authorization': 'Bearer ' + accessToken
     },
     body: JSON.stringify({
-      profileId: targetId,
-      newPassword: password
+      profileId: profileId,
+      profile_id: profileId,
+      userId: authUserId,
+      user_id: authUserId,
+      authUserId: authUserId,
+      newPassword: password,
+      new_password: password
     })
   });
 
@@ -2638,7 +2665,7 @@ async function saveCollaboratorPassword(){
     throw new Error(payload && payload.error ? payload.error : 'Não foi possível alterar a palavra-passe.');
   }
 
-  await logGenericAudit('auditoria_perfis', 'perfil_id', targetId, 'Palavra-passe redefinida', {
+  await logGenericAudit('auditoria_perfis', 'perfil_id', profileId, 'Palavra-passe redefinida', {
     alteracoes: [
       { campo: 'Palavra-passe', anterior: '—', novo: 'Redefinida internamente' }
     ]
@@ -3063,7 +3090,7 @@ function renderTable(type){
         '<td class="mono">'+esc(p.username||'—')+'</td>'+
         '<td>'+funcaoBadge(p.funcao)+'</td>'+
         '<td>'+(p.ativo!==false?badge('Activo','b-green'):badge('Inactivo','b-red'))+'</td>'+
-        '<td class="muted">'+formatDateTime(p.created_at||'')+'</td></tr>';
+        '<td class="muted">'+formatDateTime(p.created_at || p.createdAt || '')+'</td></tr>';
     }).join(''):'<tr><td colspan="5" style="padding:30px;text-align:center;color:var(--text3);">Nenhum colaborador encontrado</td></tr>';
     return;
   }
@@ -3494,7 +3521,8 @@ function openDetail(type,id){
       drow('Função', funcaoBadge(p.funcao))+
       drow('Estado', p.ativo!==false?badge('Activo','b-green'):badge('Inactivo','b-red'))+
       drow('Criado em', formatDateTime(p.created_at||''))+
-      drow('ID', esc(shortId(p.id||'')))
+      drow('ID do perfil', esc(shortId(p.id||'')))+
+      drow('ID Auth', esc(shortId(resolveCollaboratorAuthUserId(p)||'')))
     );
     body += '<div class="guia-info"><strong>Gestão de acesso</strong>Esta área já permite editar função, activar/desactivar perfis e redefinir a palavra-passe a partir do backend seguro.</div>';
     footer += '<button class="btn btn-ghost" onclick="openCollaboratorPasswordModal(\''+p.id+'\')">Alterar palavra-passe</button>';
