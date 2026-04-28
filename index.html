@@ -1192,7 +1192,7 @@
       </select>
       <select class="fs" id="f-recl-tipo" onchange="renderReclamacoes()">
         <option value="">Todos os tipos</option>
-        <option>Reparação</option><option>Substituição</option><option>Reembolso</option>
+        <option>Reparação</option><option>Substituição</option><option>Nota de Crédito</option>
       </select>
       <select class="fs" id="f-recl-resp" onchange="renderReclamacoes()">
         <option value="">Todos os responsáveis</option>
@@ -4282,7 +4282,7 @@ function openModalReclamacao(data){
     +'<div class="fg"><label class="flabel">Responsável</label><select class="fselect" id="f-recl-responsavel">'+['Marlene','Raquel','Tânia','Evylleen'].map(function(n){return '<option '+((data.responsavel||'Marlene')===n?'selected':'')+'>'+n+'</option>';}).join('')+'</select></div>'
     +'<div class="fg full"><label class="flabel">Cliente</label><select class="fselect" id="f-recl-cli"><option value="">Seleccionar...</option>'+cliOpts+'</select></div>'
     +'<div class="fg full"><label class="flabel">Encomenda associada</label><select class="fselect" id="f-recl-enc"><option value="">—</option>'+encOpts+'</select></div>'
-    +'<div class="fg"><label class="flabel">Tipo de resolução</label><select class="fselect" id="f-recl-tipo"><option value="">—</option>'+['Reparação','Substituição','Reembolso'].map(function(t){return '<option '+((data.tipoResolucao||'')===t?'selected':'')+'>'+t+'</option>';}).join('')+'</select></div>'
+    +'<div class="fg"><label class="flabel">Tipo de resolução</label><select class="fselect" id="f-recl-tipo"><option value="">—</option>'+['Reparação','Substituição','Nota de Crédito'].map(function(t){return '<option '+((data.tipoResolucao||'')===t?'selected':'')+'>'+t+'</option>';}).join('')+'</select></div>'
     +'<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-recl-estado">'+eOpts+'</select></div>'
     +'<div class="fg full"><label class="flabel">Artigo em causa</label><input class="finput" id="f-recl-artigo" value="'+esc(data.artigo||'')+'" placeholder="Ex: Sofá premium..."></div>'
     +'<div class="fg full"><label class="flabel">Descrição</label><textarea class="ftextarea" id="f-recl-desc" placeholder="Problema reportado...">'+esc(data.descricao||'')+'</textarea></div>'
