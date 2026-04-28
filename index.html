@@ -3,35 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Decorarte — Logística</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>Decorarte — Sistema Operacional</title>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
-    --bg:#F5F2EE;--surface:#FFF;--surface2:#F0EDE8;--border:#E2DDD6;--border-s:#C8C0B4;
-    --text:#1A1714;--text2:#6B6560;--text3:#A09890;
-    --green:#2D5016;--green-l:#EAF0E3;
-    --amber:#8B5E00;--amber-l:#FBF3E0;
-    --red:#8B1A1A;--red-l:#FAEAEA;
+    --bg:#F4F0E8;--surface:#FDFAF5;--surface2:#EDE8DF;--border:#DDD8CE;--border-s:#BFB8AE;
+    --text:#1C1A16;--text2:#6A6258;--text3:#A49C90;
+    --green:#1C3A0C;--green-l:#E8EFE0;
+    --amber:#7A5200;--amber-l:#FBF0DC;
+    --red:#7A1818;--red-l:#FAE8E8;
     --blue:#1A3A5C;--blue-l:#E3EBF4;
-    --purple:#4A2878;--purple-l:#F0EAF8;
-    --r:10px;--rs:6px;
-    --sh:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
-    --sh-lg:0 8px 32px rgba(0,0,0,.12);
+    --purple:#3D2068;--purple-l:#EEE6F8;
+    --r:12px;--rs:7px;
+    --sh:0 1px 4px rgba(28,26,22,.07),0 4px 16px rgba(28,26,22,.05);
+    --sh-lg:0 12px 40px rgba(28,26,22,.14);
+    --sh-card:0 2px 8px rgba(28,26,22,.06),0 8px 24px rgba(28,26,22,.04);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;}
   .app{display:flex;height:100vh;overflow:hidden;}
 
   /* NAV */
-  .nav{width:220px;flex-shrink:0;background:var(--text);color:#fff;display:flex;flex-direction:column;}
+  .nav{width:220px;flex-shrink:0;background:linear-gradient(180deg,#1C1A16 0%,#232018 100%);color:#fff;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.04);}
   .nav-logo{padding:28px 24px 20px;border-bottom:1px solid rgba(255,255,255,.08);}
-  .nav-logo .wm{font-family:'DM Serif Display',serif;font-size:22px;letter-spacing:-.5px;color:#fff;}
-  .nav-logo .sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+  .nav-logo .wm{font-family:'Bodoni Moda',serif;font-size:24px;letter-spacing:-.3px;color:#fff;font-weight:400;}
+  .nav-logo .sub{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:3px;text-transform:uppercase;margin-top:5px;}
   .nav-items{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:2px;}
   .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--rs);cursor:pointer;color:rgba(255,255,255,.55);font-size:13px;border:none;background:none;width:100%;text-align:left;transition:all .15s;font-family:'DM Sans',sans-serif;}
   .nav-item:hover{color:#fff;background:rgba(255,255,255,.08);}
-  .nav-item.active{color:#fff;background:rgba(255,255,255,.12);font-weight:500;}
+  .nav-item.active{color:#fff;background:rgba(255,255,255,.1);font-weight:500;border-left:2px solid rgba(255,255,255,.4);padding-left:10px;}
   .nav-item .icon{width:16px;text-align:center;font-size:14px;}
   .nb{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:500;padding:2px 6px;border-radius:20px;min-width:18px;text-align:center;}
   .nb.g{background:var(--green);}
@@ -42,8 +43,8 @@
 
   /* MAIN */
   .main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
-  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
-  .topbar h1{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;flex:1;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;gap:16px;flex-shrink:0;box-shadow:0 1px 0 var(--border),0 2px 8px rgba(28,26,22,.04);}
+  .topbar h1{font-family:'Bodoni Moda',serif;font-size:21px;font-weight:400;flex:1;letter-spacing:-.3px;}
   .content{flex:1;overflow-y:auto;padding:24px 28px;}
   .panel{display:none;}
   .panel.active{display:block;animation:fadeIn .2s ease;}
@@ -51,7 +52,7 @@
 
   /* BUTTONS */
   .btn{padding:7px 14px;border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;border:1px solid transparent;transition:all .15s;}
-  .btn-primary{background:var(--text);color:#fff;}
+  .btn-primary{background:var(--text);color:#fff;letter-spacing:.3px;}
   .btn-primary:hover{background:#333;}
   .btn-primary:disabled{background:#999;cursor:not-allowed;}
   .btn-ghost{background:transparent;color:var(--text2);border-color:var(--border);}
@@ -61,12 +62,12 @@
 
   /* METRICS */
   .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
-  .mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);}
+  .mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh-card);transition:box-shadow .2s;}
   .mc.alert{border-color:#E8C8C8;background:var(--red-l);}
   .mc.ok{border-color:#C8DDB8;background:var(--green-l);}
   .mc.warn{border-color:#E8CC80;background:var(--amber-l);}
   .mc-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
-  .mc-val{font-family:'DM Serif Display',serif;font-size:32px;line-height:1;}
+  .mc-val{font-family:'Bodoni Moda',serif;font-size:32px;line-height:1;}
   .mc.alert .mc-val{color:var(--red);}
   .mc.ok .mc-val{color:var(--green);}
   .mc.warn .mc-val{color:var(--amber);}
@@ -77,7 +78,7 @@
   .alert-banner.danger{background:var(--red-l);border-color:#E8A0A0;color:var(--red);}
 
   /* TABLE CARD */
-  .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+  .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh-card);}
   .table-toolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .si{padding:6px 12px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);width:200px;outline:none;}
   .si:focus{border-color:var(--border-s);background:var(--surface);}
@@ -110,19 +111,19 @@
   .fs-step{flex:1;padding:10px 8px;text-align:center;border-right:1px solid var(--border);cursor:pointer;transition:background .15s;position:relative;}
   .fs-step:last-child{border-right:none;}
   .fs-step:hover{background:var(--surface2);}
-  .fs-step .fsn{font-family:'DM Serif Display',serif;font-size:20px;line-height:1;}
+  .fs-step .fsn{font-family:'Bodoni Moda',serif;font-size:20px;line-height:1;}
   .fs-step .fsl{font-size:9px;color:var(--text3);margin-top:2px;letter-spacing:.3px;}
   .fs-step .fsc{position:absolute;top:6px;right:6px;font-size:9px;background:var(--red);color:#fff;border-radius:20px;padding:1px 5px;}
 
   /* DETAIL PANEL */
-  .overlay{position:fixed;inset:0;background:rgba(26,23,20,.4);z-index:100;display:none;backdrop-filter:blur(2px);}
+  .overlay{position:fixed;inset:0;background:rgba(28,26,22,.45);z-index:100;display:none;backdrop-filter:blur(3px);}
   .overlay.open{display:block;}
-  .detail{position:fixed;top:0;right:0;bottom:0;width:500px;background:var(--surface);box-shadow:var(--sh-lg);z-index:101;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
+  .detail{position:fixed;top:0;right:0;bottom:0;width:520px;background:var(--surface);box-shadow:-4px 0 60px rgba(28,26,22,.16);z-index:101;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
   .detail.open{transform:translateX(0);}
   .detail-hdr{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;}
   .detail-close{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text3);font-size:22px;line-height:1;flex-shrink:0;}
   .detail-close:hover{color:var(--text);}
-  .detail-title{font-family:'DM Serif Display',serif;font-size:20px;line-height:1.2;margin-bottom:4px;}
+  .detail-title{font-family:'Bodoni Moda',serif;font-size:20px;line-height:1.2;margin-bottom:4px;}
   .detail-ref{font-size:12px;color:var(--text3);}
   .detail-body{flex:1;overflow-y:auto;padding:20px 24px;}
   .detail-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--surface2);}
@@ -150,7 +151,7 @@
   .route-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   .rc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
   .rc-hdr{padding:14px 18px;background:var(--text);color:#fff;display:flex;align-items:center;gap:10px;}
-  .rc-hdr h3{font-family:'DM Serif Display',serif;font-size:16px;font-weight:400;}
+  .rc-hdr h3{font-family:'Bodoni Moda',serif;font-size:16px;font-weight:400;}
   .rc-hdr .rhs{font-size:11px;opacity:.5;margin-left:auto;}
   .rs{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;}
   .rs:last-child{border-bottom:none;}
@@ -167,7 +168,7 @@
   .zone-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;}
   .zc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
   .zc-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface2);}
-  .zc-hdr h3{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;line-height:1.1;}
+  .zc-hdr h3{font-family:'Bodoni Moda',serif;font-size:18px;font-weight:400;line-height:1.1;}
   .zc-meta{margin-left:auto;font-size:12px;color:var(--text2);}
   .zc-body{padding:14px 18px;}
   .zone-metrics{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
@@ -181,9 +182,9 @@
   /* MODAL */
   .modal-overlay{position:fixed;inset:0;background:rgba(26,23,20,.5);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
   .modal-overlay.open{display:flex;}
-  .modal{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh-lg);width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;}
+  .modal{background:var(--surface);border-radius:16px;box-shadow:0 24px 80px rgba(28,26,22,.2);width:580px;max-width:95vw;max-height:90vh;overflow-y:auto;}
   .modal-hdr{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-  .modal-hdr h2{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;}
+  .modal-hdr h2{font-family:'Bodoni Moda',serif;font-size:20px;font-weight:400;}
   .modal-body{padding:20px 24px;}
   .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--surface2);}
 
@@ -192,8 +193,8 @@
   .fg{display:flex;flex-direction:column;gap:5px;}
   .fg.full{grid-column:1/-1;}
   .flabel{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;}
-  .finput,.fselect,.ftextarea{padding:8px 12px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);outline:none;width:100%;transition:border-color .15s;}
-  .finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--border-s);background:var(--surface);}
+  .finput,.fselect,.ftextarea{padding:9px 12px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);outline:none;width:100%;transition:border-color .2s,box-shadow .2s;}
+  .finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--text3);background:var(--surface);box-shadow:0 0 0 3px rgba(28,26,22,.06);}
   .ftextarea{resize:vertical;min-height:72px;}
 
   /* KANBAN */
@@ -203,7 +204,7 @@
   .kcol-cnt{font-size:11px;background:var(--border);border-radius:20px;padding:1px 7px;color:var(--text2);}
   .kcol-cards{padding:8px;display:flex;flex-direction:column;gap:8px;min-height:60px;}
   .kcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;cursor:pointer;transition:all .15s;box-shadow:var(--sh);}
-  .kcard:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);transform:translateY(-1px);}
+  .kcard:hover{box-shadow:0 6px 20px rgba(28,26,22,.12);transform:translateY(-2px);}
   .kcard.kcard-warn{border-left:3px solid var(--amber);}
   .kc-ref{font-size:10px;color:var(--text3);font-weight:500;margin-bottom:4px;}
   .kc-name{font-size:13px;font-weight:500;margin-bottom:6px;}
@@ -213,7 +214,7 @@
   .calendar-shell{display:flex;flex-direction:column;gap:16px;}
   .calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);}
   .calendar-title-wrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-  .calendar-month-title{font-family:'DM Serif Display',serif;font-size:24px;line-height:1;}
+  .calendar-month-title{font-family:'Bodoni Moda',serif;font-size:24px;line-height:1;}
   .calendar-nav{display:flex;align-items:center;gap:8px;}
   .calendar-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);}
   .calendar-grid-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
@@ -256,15 +257,16 @@
   .smart-stop-sub{font-size:11px;color:var(--text3);margin-top:3px;}
   .smart-stop-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
 
-  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar{width:5px;height:5px;}
   ::-webkit-scrollbar-track{background:transparent;}
-  ::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:3px;}
+  ::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:10px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--text3);}
 /* LOGIN */
 .auth-overlay{position:fixed;inset:0;background:rgba(26,23,20,.58);display:none;align-items:center;justify-content:center;z-index:10000;backdrop-filter:blur(4px);}
 .auth-overlay.open{display:flex;}
-.auth-card{width:420px;max-width:92vw;background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--sh-lg);overflow:hidden;}
+.auth-card{width:440px;max-width:92vw;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 24px 80px rgba(28,26,22,.18);overflow:hidden;}
 .auth-card-head{padding:26px 28px 18px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#fff,#faf8f5);}
-.auth-card-title{font-family:'DM Serif Display',serif;font-size:28px;line-height:1;margin-bottom:8px;color:var(--text);}
+.auth-card-title{font-family:'Bodoni Moda',serif;font-size:32px;line-height:1;margin-bottom:10px;color:var(--text);letter-spacing:-.5px;}
 .auth-card-sub{font-size:13px;color:var(--text2);line-height:1.6;}
 .auth-card-body{padding:22px 28px 26px;}
 .auth-error{min-height:18px;font-size:12px;color:var(--red);margin-top:10px;}
@@ -278,7 +280,7 @@
   <nav class="nav">
     <div class="nav-logo">
       <div class="wm">Decorarte</div>
-      <div class="sub">Logística</div>
+      <div class="sub">Sistema Operacional</div>
     </div>
     <div class="nav-items">
       <div class="nav-sec">Operações</div>
@@ -294,6 +296,7 @@
       <button class="nav-item" onclick="showPanel('calendario')"><span class="icon">◷</span> Calendário</button>
       <button class="nav-item" onclick="showPanel('rotas')"><span class="icon">◌</span> Rotas do dia</button>
       <button class="nav-item" onclick="showPanel('floral')"><span class="icon">✿</span> Floral <span class="nb" id="nb-floral">0</span></button>
+      <button class="nav-item" onclick="showPanel('reclamacoes')"><span class="icon">◈</span> Reclamações <span class="nb" id="nb-recl">0</span></button>
       <div class="nav-sec">Cadastros</div>
       <button class="nav-item" onclick="showPanel('clientes')"><span class="icon">○</span> Clientes</button>
       <button class="nav-item" onclick="showPanel('colaboradores')"><span class="icon">◉</span> Colaboradores</button>
@@ -652,6 +655,47 @@
   </div>
 </div>
 
+<!-- RECLAMAÇÕES -->
+<div class="panel" id="panel-reclamacoes">
+  <div class="alert-banner" style="margin-bottom:16px;">
+    ◈ Gestão de reclamações pós-entrega — responsável, tipo de resolução e acompanhamento até ao fecho.
+  </div>
+  <div class="metrics" id="recl-metrics"></div>
+  <div class="table-card">
+    <div class="table-toolbar">
+      <input class="si" placeholder="Pesquisar cliente ou referência..." id="s-recl" oninput="renderReclamacoes()">
+      <select class="fs" id="f-recl-estado" onchange="renderReclamacoes()">
+        <option value="">Todos os estados</option>
+        <option>Registada</option><option>Aguarda recolha no cliente</option>
+        <option>Em reparação</option><option>Aguarda substituição</option>
+        <option>Pronto para entrega</option><option>Resolvida</option><option>Cancelada</option>
+      </select>
+      <select class="fs" id="f-recl-tipo" onchange="renderReclamacoes()">
+        <option value="">Todos os tipos</option>
+        <option>Reparação</option><option>Substituição</option><option>Reembolso</option>
+      </select>
+      <select class="fs" id="f-recl-resp" onchange="renderReclamacoes()">
+        <option value="">Todos os responsáveis</option>
+        <option>Marlene</option><option>Raquel</option><option>Tânia</option><option>Evylleen</option>
+      </select>
+      <button class="btn btn-primary" onclick="openNewReclamacao()">+ Nova reclamação</button>
+    </div>
+    <table><thead><tr>
+      <th>Ref.</th><th>Cliente</th><th>Encomenda</th><th>Responsável</th>
+      <th>Tipo resolução</th><th>Estado</th><th>Registada em</th><th>Última actualização</th>
+    </tr></thead><tbody id="tb-recl"></tbody></table>
+  </div>
+</div>
+
+<!-- RECLAMAÇÕES CSS -->
+<style>
+  .recl-flow{display:flex;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;font-size:10px;margin-bottom:16px;}
+  .recl-flow-s{flex:1;padding:7px 4px;text-align:center;background:var(--surface2);color:var(--text3);border-right:1px solid var(--border);}
+  .recl-flow-s:last-child{border-right:none;}
+  .recl-flow-s.done{background:var(--green-l);color:var(--green);}
+  .recl-flow-s.current{background:var(--green);color:#fff;font-weight:500;}
+</style>
+
 <!-- DETAIL OVERLAY -->
 <div class="overlay" id="overlay" onclick="closeDetail()"></div>
 <div class="detail" id="detail">
@@ -686,7 +730,7 @@
   <div class="auth-card">
     <div class="auth-card-head">
       <div class="auth-card-title">Acesso reservado</div>
-      <div class="auth-card-sub">Introduza o nome de utilizador ou email interno e a palavra-passe para entrar no sistema de logística Decorarte.</div>
+      <div class="auth-card-sub">Introduza o nome de utilizador ou email interno e a palavra-passe para entrar no sistema operacional Decorarte.</div>
     </div>
     <div class="auth-card-body">
       <div class="fg full">
@@ -740,7 +784,7 @@ const supabaseClient = createSupabaseClientSafe();
 <script>
 
 // ─── DATA / STORAGE ───────────────────────────────────────────────────────────
-const EMPTY_DB = { clientes: [], encomendas: [], fornecedores: [] };
+const EMPTY_DB = { clientes: [], encomendas: [], fornecedores: [], reclamacoes: [] };
 let DB = JSON.parse(JSON.stringify(EMPTY_DB));
 let CURRENT_EDIT = null;
 let CALENDAR_DATE = new Date();
@@ -819,25 +863,39 @@ function normaliseLoadedFornecedor(f){
     updatedAt: String(f.updatedAt||'')
   });
 }
-function normaliseLoadedDB(parsed){
-  parsed = parsed && typeof parsed==='object' ? parsed : {};
+function normaliseLoadedReclamacao(r){
+  r=r&&typeof r==='object'?r:{};
   return {
-    clientes: Array.isArray(parsed.clientes) ? parsed.clientes.map(normaliseLoadedCliente) : [],
-    encomendas: Array.isArray(parsed.encomendas) ? parsed.encomendas.map(normaliseLoadedEncomenda) : [],
-    fornecedores: Array.isArray(parsed.fornecedores) ? parsed.fornecedores.map(normaliseLoadedFornecedor) : []
+    id:String(r.id||''),clienteId:String(r.clienteId||r.cliente_id||''),encId:String(r.encId||r.enc_id||''),
+    refRecl:String(r.refRecl||r.ref_recl||''),responsavel:String(r.responsavel||''),
+    tipoResolucao:String(r.tipoResolucao||r.tipo_resolucao||''),estado:String(r.estado||'Registada'),
+    descricao:String(r.descricao||''),artigo:String(r.artigo||''),notas:String(r.notas||''),
+    createdBy:String(r.createdBy||r.created_by||''),updatedBy:String(r.updatedBy||r.updated_by||''),
+    createdAt:String(r.createdAt||r.created_at||''),updatedAt:String(r.updatedAt||r.updated_at||'')
+  };
+}
+function normaliseLoadedDB(parsed){
+  parsed=parsed&&typeof parsed==='object'?parsed:{};
+  return {
+    clientes:Array.isArray(parsed.clientes)?parsed.clientes.map(normaliseLoadedCliente):[],
+    encomendas:Array.isArray(parsed.encomendas)?parsed.encomendas.map(normaliseLoadedEncomenda):[],
+    fornecedores:Array.isArray(parsed.fornecedores)?parsed.fornecedores.map(normaliseLoadedFornecedor):[],
+    reclamacoes:Array.isArray(parsed.reclamacoes)?parsed.reclamacoes.map(normaliseLoadedReclamacao):[]
   };
 }
 async function loadDB(){
   try{
-    const [{ data: clientes, error: clientesError }, { data: encomendas, error: encomendasError }, { data: fornecedores, error: fornecedoresError }] = await Promise.all([
+    const [{ data: clientes, error: clientesError }, { data: encomendas, error: encomendasError }, { data: fornecedores, error: fornecedoresError }, { data: reclamacoes, error: reclamacoesError }] = await Promise.all([
       supabaseClient.from('clientes').select('*').order('created_at', { ascending: true }),
       supabaseClient.from('encomendas').select('*').order('created_at', { ascending: true }),
-      supabaseClient.from('fornecedores').select('*').order('created_at', { ascending: true })
+      supabaseClient.from('fornecedores').select('*').order('created_at', { ascending: true }),
+      supabaseClient.from('reclamacoes').select('*').order('created_at', { ascending: true })
     ]);
 
     if(clientesError) throw clientesError;
     if(encomendasError) throw encomendasError;
     if(fornecedoresError) throw fornecedoresError;
+    if(reclamacoesError&&reclamacoesError.code!=='PGRST116') console.warn('Reclamações:',reclamacoesError.message);
 
     return normaliseLoadedDB({
       clientes: (clientes || []).map(function(c){
@@ -910,7 +968,8 @@ async function loadDB(){
           createdAt: f.created_at,
           updatedAt: f.updated_at
         };
-      })
+      }),
+      reclamacoes:(reclamacoes||[]).map(function(r){return{id:r.id,clienteId:r.cliente_id,encId:r.enc_id,refRecl:r.ref_recl,responsavel:r.responsavel,tipoResolucao:r.tipo_resolucao,estado:r.estado,descricao:r.descricao,artigo:r.artigo,notas:r.notas,createdBy:r.created_by,updatedBy:r.updated_by,createdAt:r.created_at,updatedAt:r.updated_at};})
     });
   }catch(err){
     console.warn('Erro ao carregar dados do Supabase. A iniciar base vazia.', err);
@@ -1595,6 +1654,7 @@ function refreshAll(){
   renderRotas();
   renderCalendar();
   renderFloral();
+  if(typeof renderReclamacoes==='function') renderReclamacoes();
   updateBadges();
 }
 async function saveAndRefresh(){
@@ -1771,16 +1831,17 @@ function showPanel(name){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
   const panel=document.getElementById('panel-'+name);
   if(panel) panel.classList.add('active');
-  const map={dashboard:0,encomendas:1,orcamentos:2,fornecedores:3,entregas:4,'nao-faturadas':5,fecho:6,guias:7,calendario:8,rotas:9,floral:10,clientes:11,colaboradores:12};
+  const map={dashboard:0,encomendas:1,orcamentos:2,fornecedores:3,entregas:4,'nao-faturadas':5,fecho:6,guias:7,calendario:8,rotas:9,floral:10,reclamacoes:11,clientes:12,colaboradores:13};
   const navItem=document.querySelectorAll('.nav-item')[map[name]];
   if(navItem) navItem.classList.add('active');
   const titles={dashboard:'Dashboard',encomendas:'Encomendas',orcamentos:'Orçamentos',
     fornecedores:'Fornecedores',entregas:'Entregas','nao-faturadas':'Entregue mas não faturado',fecho:'Entregues e pagos',guias:'Guias em falta',
-    calendario:'Calendário',rotas:'Rotas do dia',floral:'Módulo floral',clientes:'Clientes',colaboradores:'Colaboradores'};
+    calendario:'Calendário',rotas:'Rotas do dia',floral:'Módulo floral',reclamacoes:'Reclamações',clientes:'Clientes',colaboradores:'Colaboradores'};
   document.getElementById('topbar-title').textContent=titles[name]||name;
   if(name==='calendario') renderCalendar();
   else if(name==='rotas') renderRotas();
   else if(name==='floral') renderFloral();
+  else if(name==='reclamacoes') renderReclamacoes();
   else if(name==='dashboard') renderDashboard();
   else if(name==='encomendas') renderTable('enc');
   else if(name==='orcamentos') renderTable('orc');
@@ -1815,6 +1876,7 @@ function updateBadges(){
   const floral=enc.filter(function(e){return e.temFloral && e.responsavelFloral==='Maria' && e.estadoFloral && e.estadoFloral!=='Pronto para entrega' && e.estado!=='Entregue' && e.estado!=='Cancelado';}).length;
   document.getElementById('nb-floral').textContent=floral;
   document.getElementById('nb-floral').className='nb'+(floral>0?' a':'');
+  if(typeof updateBadgesRecl==='function') updateBadgesRecl();
 }
 
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
@@ -1898,6 +1960,8 @@ function renderDashboard(){
   if(semPag>0) alerts+='<div class="alert-banner danger">⚠ '+semPag+' entrega(s) bloqueada(s) sem pagamento confirmado.</div>';
   const naoFat=enc.filter(function(e){return isEntregueNaoFaturado(e);}).length;
   if(naoFat>0) alerts+='<div class="alert-banner danger">💶 '+naoFat+' encomenda(s) entregue(s) ainda não faturada(s). <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;margin-left:8px;" onclick="showPanel(\'nao-faturadas\')">Ver →</button></div>';
+  var reclAbertas=(DB.reclamacoes||[]).filter(function(r){return r.estado!=='Resolvida'&&r.estado!=='Cancelada';}).length;
+  if(reclAbertas>0) alerts+='<div class="alert-banner danger">⚠ '+reclAbertas+' reclamação(ões) em aberto. <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;margin-left:8px;" onclick="showPanel(\'reclamacoes\')">Ver →</button></div>';
   if(operationalAlerts.length){
     alerts += operationalAlerts.slice(0,6).map(function(a){
       return '<div class="alert-banner '+(a.level==='danger'?'danger':'')+'">'+a.icon+' '+esc(a.text)+' <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;margin-left:8px;" onclick="'+a.action+'">Ver →</button></div>';
@@ -2080,6 +2144,10 @@ function syncSupplierFields(){
 }
 
 async function saveRecord(){
+  if(CURRENT_EDIT && CURRENT_EDIT.type==='recl'){
+    if(typeof saveReclamacaoRecord==='function') await saveReclamacaoRecord();
+    return;
+  }
   const type = CURRENT_EDIT ? CURRENT_EDIT.type : (function(){
     const panel=getActivePanel();
     if(panel==='clientes') return 'cli';
@@ -2241,23 +2309,6 @@ async function saveRecord(){
   }
 
 
-if(type==='col'){
-  document.getElementById('modal-title').textContent='Editar colaborador';
-  document.getElementById('modal-body').innerHTML='<div class="form-grid">'+
-    '<div class="fg"><label class="flabel">Nome</label><input class="finput" id="f-col-nome" value="'+esc(data.nome||'')+'" placeholder="Nome completo"></div>'+
-    '<div class="fg"><label class="flabel">Utilizador</label><input class="finput" id="f-col-username" value="'+esc(data.username||'')+'" disabled></div>'+
-    '<div class="fg"><label class="flabel">Função</label><select class="fselect" id="f-col-funcao">'+
-      '<option value="gestao_admin" '+((data.funcao||'')==='gestao_admin'?'selected':'')+'>Gestão / Administração</option>'+
-      '<option value="administrativo" '+((data.funcao||'')==='administrativo'?'selected':'')+'>Administrativo</option>'+
-      '<option value="administrativo_logistica" '+((data.funcao||'')==='administrativo_logistica'?'selected':'')+'>Administrativo / Logística</option>'+
-      '<option value="floral" '+((data.funcao||'')==='floral'?'selected':'')+'>Floral</option>'+
-      '<option value="entregas" '+((data.funcao||'')==='entregas'?'selected':'')+'>Entregas</option>'+
-      '<option value="design_interiores_logistica" '+((data.funcao||'')==='design_interiores_logistica'?'selected':'')+'>Design de Interiores / Logística</option>'+
-    '</select></div>'+
-    '<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-col-ativo"><option value="1" '+(data.ativo!==false?'selected':'')+'>Activo</option><option value="0" '+(data.ativo===false?'selected':'')+'>Inactivo</option></select></div>'+
-    '<div class="fg full"><div class="guia-info"><strong>Nota</strong>Nesta fase, esta área gere o perfil operacional. A criação de novas contas e a redefinição de palavra-passe serão ligadas ao backend seguro no Vercel.</div></div>'+
-    '</div>';
-}
 
   if(type==='enc'){
     const refXD=document.getElementById('f-refxd').value.trim();
@@ -2837,23 +2888,6 @@ function openModalForType(type, data){
   }
 
 
-if(type==='col'){
-  document.getElementById('modal-title').textContent='Editar colaborador';
-  document.getElementById('modal-body').innerHTML='<div class="form-grid">'+
-    '<div class="fg"><label class="flabel">Nome</label><input class="finput" id="f-col-nome" value="'+esc(data.nome||'')+'" placeholder="Nome completo"></div>'+
-    '<div class="fg"><label class="flabel">Utilizador</label><input class="finput" id="f-col-username" value="'+esc(data.username||'')+'" disabled></div>'+
-    '<div class="fg"><label class="flabel">Função</label><select class="fselect" id="f-col-funcao">'+
-      '<option value="gestao_admin" '+((data.funcao||'')==='gestao_admin'?'selected':'')+'>Gestão / Administração</option>'+
-      '<option value="administrativo" '+((data.funcao||'')==='administrativo'?'selected':'')+'>Administrativo</option>'+
-      '<option value="administrativo_logistica" '+((data.funcao||'')==='administrativo_logistica'?'selected':'')+'>Administrativo / Logística</option>'+
-      '<option value="floral" '+((data.funcao||'')==='floral'?'selected':'')+'>Floral</option>'+
-      '<option value="entregas" '+((data.funcao||'')==='entregas'?'selected':'')+'>Entregas</option>'+
-      '<option value="design_interiores_logistica" '+((data.funcao||'')==='design_interiores_logistica'?'selected':'')+'>Design de Interiores / Logística</option>'+
-    '</select></div>'+
-    '<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-col-ativo"><option value="1" '+(data.ativo!==false?'selected':'')+'>Activo</option><option value="0" '+(data.ativo===false?'selected':'')+'>Inactivo</option></select></div>'+
-    '<div class="fg full"><div class="guia-info"><strong>Nota</strong>Nesta fase, esta área gere o perfil operacional. A criação de novas contas e a redefinição de palavra-passe serão ligadas ao backend seguro no Vercel.</div></div>'+
-    '</div>';
-}
 
   if(type==='enc'){
     const tipoVal=data.tipo||'Encomenda';
@@ -3311,23 +3345,6 @@ function deleteRecord(type,id){
   if(type==='forn') DB.fornecedores = DB.fornecedores.filter(function(f){return f.id!==id;});
   persistDB().then(async function(){
   
-if(type==='col'){
-  document.getElementById('modal-title').textContent='Editar colaborador';
-  document.getElementById('modal-body').innerHTML='<div class="form-grid">'+
-    '<div class="fg"><label class="flabel">Nome</label><input class="finput" id="f-col-nome" value="'+esc(data.nome||'')+'" placeholder="Nome completo"></div>'+
-    '<div class="fg"><label class="flabel">Utilizador</label><input class="finput" id="f-col-username" value="'+esc(data.username||'')+'" disabled></div>'+
-    '<div class="fg"><label class="flabel">Função</label><select class="fselect" id="f-col-funcao">'+
-      '<option value="gestao_admin" '+((data.funcao||'')==='gestao_admin'?'selected':'')+'>Gestão / Administração</option>'+
-      '<option value="administrativo" '+((data.funcao||'')==='administrativo'?'selected':'')+'>Administrativo</option>'+
-      '<option value="administrativo_logistica" '+((data.funcao||'')==='administrativo_logistica'?'selected':'')+'>Administrativo / Logística</option>'+
-      '<option value="floral" '+((data.funcao||'')==='floral'?'selected':'')+'>Floral</option>'+
-      '<option value="entregas" '+((data.funcao||'')==='entregas'?'selected':'')+'>Entregas</option>'+
-      '<option value="design_interiores_logistica" '+((data.funcao||'')==='design_interiores_logistica'?'selected':'')+'>Design de Interiores / Logística</option>'+
-    '</select></div>'+
-    '<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-col-ativo"><option value="1" '+(data.ativo!==false?'selected':'')+'>Activo</option><option value="0" '+(data.ativo===false?'selected':'')+'>Inactivo</option></select></div>'+
-    '<div class="fg full"><div class="guia-info"><strong>Nota</strong>Nesta fase, esta área gere o perfil operacional. A criação de novas contas e a redefinição de palavra-passe serão ligadas ao backend seguro no Vercel.</div></div>'+
-    '</div>';
-}
 
   if(type==='enc'){
       await logOrderAudit(id, 'Encomenda eliminada', { referencia: id });
@@ -3527,8 +3544,26 @@ function openDetail(type,id){
     body += '<div class="guia-info"><strong>Gestão de acesso</strong>Esta área já permite editar função, activar/desactivar perfis e redefinir a palavra-passe a partir do backend seguro.</div>';
     footer += '<button class="btn btn-ghost" onclick="openCollaboratorPasswordModal(\''+p.id+'\')">Alterar palavra-passe</button>';
     footer += '<button class="btn btn-ghost" onclick="openEditCollaborator(\''+p.id+'\')">Editar</button>';
-  } else {
-    return;
+  } else if(type==='recl'){
+    var r=(DB.reclamacoes||[]).find(function(x){return x.id===id;}); if(!r) return;
+    var rCli=getCli(r.clienteId); var rEnc=getEnc(r.encId);
+    document.getElementById('dp-title').textContent='Reclamação — '+(rCli.nome||'Sem cliente');
+    document.getElementById('dp-ref').textContent=r.refRecl||id;
+    var RF=['Registada','Aguarda recolha no cliente','Em reparação','Aguarda substituição','Pronto para entrega','Resolvida'];
+    var RCLS={'Registada':'b-gray','Aguarda recolha no cliente':'b-amber','Em reparação':'b-blue','Aguarda substituição':'b-purple','Pronto para entrega':'b-green','Resolvida':'b-green','Cancelada':'b-red'};
+    body+='<div class="recl-flow">';
+    RF.forEach(function(s){var isCur=(r.estado||'Registada')===s;var isDone=RF.indexOf(r.estado||'Registada')>RF.indexOf(s);body+='<div class="recl-flow-s'+(isCur?' current':(isDone?' done':''))+'">'+esc(s)+'</div>';});
+    body+='</div>';
+    body+=dsec('Reclamação',drow('Referência',esc(r.refRecl||'—'))+drow('Estado',badge(r.estado||'Registada',RCLS[r.estado]||'b-gray'))+drow('Cliente',esc(rCli.nome||'—'))+drow('Encomenda',rEnc?esc(rEnc.refXD):'—')+drow('Responsável',esc(r.responsavel||'—'))+drow('Tipo de resolução',r.tipoResolucao?badge(r.tipoResolucao):'—')+drow('Artigo',esc(r.artigo||'—')));
+    body+=dsec('Descrição','<div style="font-size:13px;line-height:1.7;color:var(--text2);">'+esc(r.descricao||'—')+'</div>');
+    body+=dsec('Notas internas','<div style="font-size:13px;line-height:1.7;color:var(--text2);">'+esc(r.notas||'—')+'</div>');
+    body+=renderAuditSection(r);
+    var rIdx=RF.indexOf(r.estado||'Registada');
+    var rCanAdv=rIdx>=0&&rIdx<RF.length-1&&r.estado!=='Cancelada';
+    var rNext=rCanAdv?RF[rIdx+1]:'';
+    footer+='<button class="btn btn-ghost" onclick="openEditReclamacao(\'+r.id+\')">Editar</button>';
+    footer+='<button class="btn btn-ghost" onclick="deleteReclamacao(\'+r.id+\')">Eliminar</button>';
+    if(rCanAdv) footer+='<button class="btn btn-primary" onclick="advanceReclamacao(\'+r.id+\')">Avançar → '+esc(rNext)+'</button>';
   }
   document.getElementById('dp-body').innerHTML=body;
   document.getElementById('dp-footer').innerHTML=footer;
@@ -3646,6 +3681,131 @@ document.addEventListener('keydown', function(event){
   }
 });
 
+
+// ─── RECLAMAÇÕES ──────────────────────────────────────────────────────────────
+var RECL_FLOW=['Registada','Aguarda recolha no cliente','Em reparação','Aguarda substituição','Pronto para entrega','Resolvida'];
+var RECL_CLS={'Registada':'b-gray','Aguarda recolha no cliente':'b-amber','Em reparação':'b-blue','Aguarda substituição':'b-purple','Pronto para entrega':'b-green','Resolvida':'b-green','Cancelada':'b-red'};
+
+function renderReclamacoes(){
+  var mount=document.getElementById('tb-recl');
+  var metricsEl=document.getElementById('recl-metrics');
+  if(!mount) return;
+  var q=(document.getElementById('s-recl')||{value:''}).value.toLowerCase();
+  var fe=(document.getElementById('f-recl-estado')||{value:''}).value;
+  var ft=(document.getElementById('f-recl-tipo')||{value:''}).value;
+  var fr=(document.getElementById('f-recl-resp')||{value:''}).value;
+  var all=DB.reclamacoes||[];
+  var rows=all.filter(function(r){
+    var cli=getCli(r.clienteId); var enc=getEnc(r.encId);
+    var hay=[r.refRecl,cli.nome,r.artigo,r.descricao,enc?enc.refXD:''].join(' ').toLowerCase();
+    return(!q||hay.indexOf(q)>-1)&&(!fe||r.estado===fe)&&(!ft||r.tipoResolucao===ft)&&(!fr||r.responsavel===fr);
+  });
+  if(metricsEl){
+    var total=all.length;
+    var abertas=all.filter(function(r){return r.estado!=='Resolvida'&&r.estado!=='Cancelada';}).length;
+    var resolvidas=all.filter(function(r){return r.estado==='Resolvida';}).length;
+    var recolha=all.filter(function(r){return r.estado==='Aguarda recolha no cliente';}).length;
+    metricsEl.innerHTML='<div class="mc"><div class="mc-label">Total</div><div class="mc-val">'+total+'</div><div class="mc-sub">histórico completo</div></div>'+'<div class="mc alert"><div class="mc-label">Em aberto</div><div class="mc-val">'+abertas+'</div><div class="mc-sub">aguardam resolução</div></div>'+'<div class="mc warn"><div class="mc-label">Aguarda recolha</div><div class="mc-val">'+recolha+'</div><div class="mc-sub">artigo no cliente</div></div>'+'<div class="mc ok"><div class="mc-label">Resolvidas</div><div class="mc-val">'+resolvidas+'</div><div class="mc-sub">fechadas</div></div>';
+  }
+  mount.innerHTML=rows.length?rows.map(function(r){
+    var cli=getCli(r.clienteId); var enc=getEnc(r.encId);
+    return '<tr style="cursor:pointer" onclick="openDetail(\'recl\',\'+r.id+\')"><td class="mono">'+esc(r.refRecl||'—')+'</td><td>'+esc(cli.nome||'—')+'</td><td class="muted">'+esc(enc?enc.refXD:'—')+'</td><td>'+esc(r.responsavel||'—')+'</td><td>'+(r.tipoResolucao?badge(r.tipoResolucao):'—')+'</td><td>'+badge(r.estado||'Registada',RECL_CLS[r.estado]||'b-gray')+'</td><td class="muted">'+fmtDate((r.createdAt||'').split('T')[0])+'</td><td class="muted">'+fmtDate((r.updatedAt||'').split('T')[0])+'</td></tr>';
+  }).join(''):'<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text3);">Sem reclamações registadas.</td></tr>';
+  updateBadgesRecl();
+}
+
+function updateBadgesRecl(){
+  var el=document.getElementById('nb-recl'); if(!el) return;
+  var n=(DB.reclamacoes||[]).filter(function(r){return r.estado!=='Resolvida'&&r.estado!=='Cancelada';}).length;
+  el.textContent=n; el.className='nb'+(n>0?'':' g');
+}
+
+function openNewReclamacao(){ CURRENT_EDIT=null; openModalReclamacao({}); }
+
+function openEditReclamacao(id){
+  var r=(DB.reclamacoes||[]).find(function(x){return x.id===id;}); if(!r) return;
+  CURRENT_EDIT={type:'recl',id:id}; openModalReclamacao(r);
+}
+
+function openModalReclamacao(data){
+  data=data||{};
+  var cliOpts=DB.clientes.map(function(c){return '<option value="'+c.id+'" '+((data.clienteId||'')===c.id?'selected':'')+'>'+esc(c.nome)+'</option>';}).join('');
+  var encOpts=DB.encomendas.filter(function(e){return e.tipo!=='Orçamento';}).map(function(e){return '<option value="'+e.id+'" '+((data.encId||'')===e.id?'selected':'')+'>'+esc(e.refXD+(getCli(e.clienteId).nome?' — '+getCli(e.clienteId).nome:''))+'</option>';}).join('');
+  var eOpts=['Registada','Aguarda recolha no cliente','Em reparação','Aguarda substituição','Pronto para entrega','Resolvida','Cancelada'].map(function(s){return '<option '+((data.estado||'Registada')===s?'selected':'')+'>'+s+'</option>';}).join('');
+  document.getElementById('modal-title').textContent=(CURRENT_EDIT&&CURRENT_EDIT.id)?'Editar reclamação':'Nova reclamação';
+  document.getElementById('modal-body').innerHTML='<div class="form-grid">'
+    +'<div class="fg"><label class="flabel">Referência</label><input class="finput" id="f-recl-ref" value="'+esc(data.refRecl||'')+'" placeholder="RCL-2026-001"></div>'
+    +'<div class="fg"><label class="flabel">Responsável</label><select class="fselect" id="f-recl-responsavel">'+['Marlene','Raquel','Tânia','Evylleen'].map(function(n){return '<option '+((data.responsavel||'Marlene')===n?'selected':'')+'>'+n+'</option>';}).join('')+'</select></div>'
+    +'<div class="fg full"><label class="flabel">Cliente</label><select class="fselect" id="f-recl-cli"><option value="">Seleccionar...</option>'+cliOpts+'</select></div>'
+    +'<div class="fg full"><label class="flabel">Encomenda associada</label><select class="fselect" id="f-recl-enc"><option value="">—</option>'+encOpts+'</select></div>'
+    +'<div class="fg"><label class="flabel">Tipo de resolução</label><select class="fselect" id="f-recl-tipo"><option value="">—</option>'+['Reparação','Substituição','Reembolso'].map(function(t){return '<option '+((data.tipoResolucao||'')===t?'selected':'')+'>'+t+'</option>';}).join('')+'</select></div>'
+    +'<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-recl-estado">'+eOpts+'</select></div>'
+    +'<div class="fg full"><label class="flabel">Artigo em causa</label><input class="finput" id="f-recl-artigo" value="'+esc(data.artigo||'')+'" placeholder="Ex: Sofá premium..."></div>'
+    +'<div class="fg full"><label class="flabel">Descrição</label><textarea class="ftextarea" id="f-recl-desc" placeholder="Problema reportado...">'+esc(data.descricao||'')+'</textarea></div>'
+    +'<div class="fg full"><label class="flabel">Notas internas</label><textarea class="ftextarea" id="f-recl-notas" placeholder="Informação interna...">'+esc(data.notas||'')+'</textarea></div>'
+    +'<div class="fg full"><div class="guia-info"><strong>Fluxo</strong>Registada → Aguarda recolha → Em reparação / Aguarda substituição → Pronto para entrega → Resolvida</div></div>'
+    +'</div>';
+  if(!CURRENT_EDIT) CURRENT_EDIT={type:'recl'}; else CURRENT_EDIT.type='recl';
+  setModalOpen(true);
+}
+
+async function saveReclamacaoRecord(){
+  var ref=(document.getElementById('f-recl-ref')||{value:''}).value.trim();
+  if(!ref) ref='RCL-'+new Date().getFullYear()+'-'+String(((DB.reclamacoes||[]).length+1)).padStart(3,'0');
+  var payload={
+    cliente_id:(document.getElementById('f-recl-cli')||{value:''}).value||null,
+    enc_id:(document.getElementById('f-recl-enc')||{value:''}).value||null,
+    ref_recl:ref,
+    responsavel:(document.getElementById('f-recl-responsavel')||{value:''}).value,
+    tipo_resolucao:(document.getElementById('f-recl-tipo')||{value:''}).value,
+    estado:(document.getElementById('f-recl-estado')||{value:'Registada'}).value||'Registada',
+    artigo:(document.getElementById('f-recl-artigo')||{value:''}).value.trim(),
+    descricao:(document.getElementById('f-recl-desc')||{value:''}).value.trim(),
+    notas:(document.getElementById('f-recl-notas')||{value:''}).value.trim(),
+    updated_by:CURRENT_USER?CURRENT_USER.id:null,
+    updated_at:new Date().toISOString()
+  };
+  try{
+    if(CURRENT_EDIT&&CURRENT_EDIT.id){
+      var upd=await supabaseClient.from('reclamacoes').update(payload).eq('id',CURRENT_EDIT.id);
+      if(upd.error) throw upd.error;
+      var r=(DB.reclamacoes||[]).find(function(x){return x.id===CURRENT_EDIT.id;});
+      if(r) Object.assign(r,normaliseLoadedReclamacao(Object.assign({},payload,{id:CURRENT_EDIT.id})));
+    }else{
+      payload.created_by=CURRENT_USER?CURRENT_USER.id:null;
+      payload.created_at=new Date().toISOString();
+      var ins=await supabaseClient.from('reclamacoes').insert([payload]).select().single();
+      if(ins.error) throw ins.error;
+      if(!DB.reclamacoes) DB.reclamacoes=[];
+      DB.reclamacoes.push(normaliseLoadedReclamacao(ins.data||payload));
+    }
+    closeModal(); renderReclamacoes(); updateBadgesRecl();
+  }catch(err){ console.error(err); alert('Erro: '+(err&&err.message?err.message:'desconhecido')); }
+}
+
+async function deleteReclamacao(id){
+  if(!confirm('Eliminar esta reclamação? Não pode ser revertido.')) return;
+  try{
+    var res=await supabaseClient.from('reclamacoes').delete().eq('id',id);
+    if(res.error) throw res.error;
+    DB.reclamacoes=(DB.reclamacoes||[]).filter(function(r){return r.id!==id;});
+    closeDetail(); renderReclamacoes(); updateBadgesRecl();
+  }catch(err){ alert('Erro ao eliminar: '+(err&&err.message?err.message:'desconhecido')); }
+}
+
+async function advanceReclamacao(id){
+  var r=(DB.reclamacoes||[]).find(function(x){return x.id===id;}); if(!r) return;
+  var idx=RECL_FLOW.indexOf(r.estado||'Registada');
+  if(idx<0||idx>=RECL_FLOW.length-1) return;
+  var next=RECL_FLOW[idx+1];
+  try{
+    var now=new Date().toISOString();
+    var res=await supabaseClient.from('reclamacoes').update({estado:next,updated_by:CURRENT_USER?CURRENT_USER.id:null,updated_at:now}).eq('id',id);
+    if(res.error) throw res.error;
+    r.estado=next; r.updatedAt=now;
+    closeDetail(); renderReclamacoes(); openDetail('recl',id);
+  }catch(err){ alert('Erro ao avançar: '+(err&&err.message?err.message:'desconhecido')); }
+}
 </script>
 </body>
 </html>
