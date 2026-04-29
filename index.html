@@ -934,9 +934,9 @@
             </select>
             <select class="fs" id="f-forn-e" onchange="renderTable('forn')">
               <option value="">Todos os estados</option>
-              <option>Aguarda confirmação</option><option>Confirmado</option>
-              <option>Pronto para levantar</option><option>Levantado</option>
-              <option>Entregue directo ao cliente</option>
+              <option>Aguarda confirmação</option><option>Pendente</option>
+              <option>Em produção</option><option>Pronto para levantar</option>
+              <option>Levantado</option><option>Entrega directa ao cliente</option>
             </select>
           </div>
           <table><thead><tr>
@@ -1593,7 +1593,7 @@ const STATE_FLOW = [
   'Novo','Verificado — Tânia','Aguarda fornecedor','Aguarda aprovação cliente',
   'Confirmado','Aguarda guia de transporte','Pronto para entrega','Em rota','Entregue'
 ];
-const FORN_FLOW = ['Aguarda confirmação','Confirmado','Pronto para levantar','Levantado'];
+const FORN_FLOW = ['Aguarda confirmação','Pendente','Em produção','Pronto para levantar','Levantado','Entrega directa ao cliente'];
 const DELIVERY_OPTIONS = ['Juliander','Helder','CTT','Transitário','Cliente levanta no showroom'];
 const PAYMENT_OPTIONS = ['Pagar antes','Crédito — faturar depois','Pago — cheque','Pago — transferência','Pago — numerário'];
 const FLORAL_FLOW = ['Novo pedido','Em produção','Finalizado','Pronto para entrega'];
@@ -1952,8 +1952,8 @@ const ESTADO_CLS = {
   'Novo':'b-gray','Verificado — Tânia':'b-amber','Aguarda fornecedor':'b-amber',
   'Aguarda aprovação cliente':'b-blue','Confirmado':'b-blue','Aguarda guia de transporte':'b-amber',
   'Pronto para entrega':'b-purple','Em rota':'b-purple','Entregue':'b-green','Cancelado':'b-red',
-  'Aguarda confirmação':'b-gray','Pronto para levantar':'b-green','Levantado':'b-blue',
-  'Entregue directo ao cliente':'b-amber',
+  'Aguarda confirmação':'b-gray','Pendente':'b-amber','Em produção':'b-blue','Pronto para levantar':'b-purple','Levantado':'b-green',
+  'Entrega directa ao cliente':'b-green',
 };
 function badge(t,cls){return '<span class="badge '+(cls||ESTADO_CLS[t]||'b-gray')+'">'+esc(t)+'</span>';}
 function pagBadge(fat,pag){
@@ -2339,7 +2339,7 @@ function updateBadges(){
   const enc=DB.encomendas;
   document.getElementById('nb-enc').textContent=enc.filter(function(e){return e.tipo!=='Orçamento'&&e.estado!=='Entregue'&&e.estado!=='Cancelado';}).length;
   document.getElementById('nb-orc').textContent=enc.filter(function(e){return e.tipo==='Orçamento'&&e.estado!=='Entregue'&&e.estado!=='Cancelado';}).length;
-  const fornAtivos=DB.fornecedores.filter(function(f){return f.estado!=='Levantado'&&f.estado!=='Entregue directo ao cliente';}).length;
+  const fornAtivos=DB.fornecedores.filter(function(f){return f.estado!=='Levantado'&&f.estado!=='Entrega directa ao cliente';}).length;
   const fornAtrasados=DB.fornecedores.filter(function(f){ return isSupplierQuoteOverdue(f); }).length;
   document.getElementById('nb-forn').textContent=fornAtivos;
   document.getElementById('nb-forn').className='nb'+(fornAtrasados>0?' a':'');
@@ -2425,7 +2425,7 @@ function renderDashboard(){
   const guias=enc.filter(function(e){return e.estado==='Aguarda guia de transporte'&&!e.guia;}).length;
   const semPag=enc.filter(function(e){return e.estado==='Pronto para entrega'&&!e.pagConfirmado&&e.faturacao==='Pagar antes';}).length;
   const prontos=enc.filter(function(e){return e.estado==='Pronto para entrega';}).length;
-  const fornAtivos=DB.fornecedores.filter(function(f){return f.estado!=='Levantado'&&f.estado!=='Entregue directo ao cliente';}).length;
+  const fornAtivos=DB.fornecedores.filter(function(f){return f.estado!=='Levantado'&&f.estado!=='Entrega directa ao cliente';}).length;
 
   document.getElementById('mv-novos').textContent=novos;
   document.getElementById('mv-guia').textContent=guias;
@@ -3362,7 +3362,7 @@ function openModalForType(type, data){
       '<div class="fg"><label class="flabel">Nº Ordem</label><input class="finput" id="f-ordem" value="'+esc(data.numOrdem||'')+'" placeholder="Ex: VO-2026-XXX"></div>'+
       '<div class="fg"><label class="flabel">Tipo de pedido</label><select class="fselect" id="f-tipoPedidoForn" onchange="syncSupplierFields()"><option '+((supplierRequestType(data)||'Encomenda')==='Encomenda'?'selected':'')+'>Encomenda</option><option '+((supplierRequestType(data)||'')==='Orçamento'?'selected':'')+'>Orçamento</option></select></div>'+
       '<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-estado-forn">'+
-        ['Aguarda confirmação','Confirmado','Pronto para levantar','Levantado','Entregue directo ao cliente'].map(function(s){return '<option '+((data.estado||'Aguarda confirmação')===s?'selected':'')+'>'+s+'</option>';}).join('')+
+        ['Aguarda confirmação','Pendente','Em produção','Pronto para levantar','Levantado','Entrega directa ao cliente'].map(function(s){return '<option '+((data.estado||'Aguarda confirmação')===s?'selected':'')+'>'+s+'</option>';}).join('')+
       '</select></div>'+
       '<div class="fg full"><label class="flabel">Descrição</label><textarea class="ftextarea" id="f-desc" placeholder="Artigos pedidos...">'+esc(data.descricao||'')+'</textarea></div>'+
       '<div class="fg"><label class="flabel">Data pedido</label><input class="finput" type="date" id="f-datapedido" value="'+esc(data.dataPedido||'')+'"></div>'+
@@ -3796,6 +3796,16 @@ async function advanceFornStateFromEnc(fornId){
     await logGenericAudit('auditoria_fornecedores', 'fornecedor_id', fornId, 'Estado avançado', {
       alteracoes:[{ campo:'Estado', anterior:anterior||'—', novo:f.estado||'—' }]
     });
+    if(f.estado==='Pronto para levantar'){
+      var enc2=getEnc(f.encId);
+      var msg2='⚠ '+f.fornecedor+' está pronto para levantar!'
+        +(enc2?' ('+enc2.refXD+')':'')
+        +(f.dataLevantar?' — Data prevista: '+fmtDate(f.dataLevantar):'')
+        +'
+
+Não te esqueças de incluir na rota.';
+      setTimeout(function(){ alert(msg2); }, 200);
+    }
     refreshAll();
     if(encId) openDetail('enc', encId);
   }
@@ -3814,6 +3824,14 @@ async function advanceFornState(id){
         { campo: 'Estado', anterior: anterior || '—', novo: f.estado || '—' }
       ]
     });
+    if(f.estado==='Pronto para levantar'){
+      var enc=getEnc(f.encId);
+      var msg='⚠ '+f.fornecedor+' está pronto para levantar!'
+        +(enc?' ('+enc.refXD+')':'')
+        +(f.dataLevantar?' — Data prevista: '+fmtDate(f.dataLevantar):'')
+        +'\n\nNão te esqueças de incluir na rota.';
+      setTimeout(function(){ alert(msg); }, 200);
+    }
   }
   closeDetail();
 }
@@ -3977,9 +3995,9 @@ function openDetail(type,id){
     // Fornecedores associados a esta encomenda — com ticks de progresso
     var fornAssoc=DB.fornecedores.filter(function(f){return f.encId===e.id;});
     if(fornAssoc.length){
-      var FORN_ESTADOS_ORDEM=['Aguarda confirmação','Confirmado','Pronto para levantar','Levantado','Entregue directo ao cliente'];
+      var FORN_ESTADOS_ORDEM=['Aguarda confirmação','Pendente','Em produção','Pronto para levantar','Levantado','Entrega directa ao cliente'];
       var fornRows=fornAssoc.map(function(f,idx){
-        var isDone=(f.estado==='Levantado'||f.estado==='Entregue directo ao cliente');
+        var isDone=(f.estado==='Levantado'||f.estado==='Entrega directa ao cliente');
         var tickColor=isDone?'var(--forest)':'var(--border)';
         var tick=isDone
           ?'<div style="width:28px;height:28px;border-radius:50%;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">✓</div>'
@@ -4002,7 +4020,7 @@ function openDetail(type,id){
           +'</div>';
       }).join('');
       var totalForn=fornAssoc.length;
-      var doneForn=fornAssoc.filter(function(f){return f.estado==='Levantado'||f.estado==='Entregue directo ao cliente';}).length;
+      var doneForn=fornAssoc.filter(function(f){return f.estado==='Levantado'||f.estado==='Entrega directa ao cliente';}).length;
       var progBar='<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px;"><span>'+doneForn+' de '+totalForn+' fornecedores concluídos</span><span>'+Math.round(doneForn/totalForn*100)+'%</span></div><div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;"><div style="height:100%;background:var(--forest);border-radius:3px;width:'+Math.round(doneForn/totalForn*100)+'%;transition:width .3s;"></div></div></div>';
       body+=dsec('Fornecedores desta encomenda',progBar+'<div style="display:flex;flex-direction:column;gap:6px;">'+fornRows+'</div>'
         +'<div style="margin-top:10px;"><button class="btn btn-ghost" style="font-size:12px;" onclick="event.stopPropagation();openModalForType(\'forn\',{encId:\''+e.id+'\'})">+ Adicionar fornecedor</button></div>');
@@ -4291,9 +4309,9 @@ function renderEncFornList(){
   if(!encId){ wrap.style.display='none'; return; }
   var existentes = DB.fornecedores.filter(function(f){ return f.encId===encId; });
   if(!existentes.length){ wrap.style.display='none'; return; }
-  var FORN_CLS={'Aguarda confirmação':'b-gray','Confirmado':'b-blue','Pronto para levantar':'b-green','Levantado':'b-green','Entregue directo ao cliente':'b-amber'};
+  var FORN_CLS={'Aguarda confirmação':'b-gray','Pendente':'b-amber','Em produção':'b-blue','Pronto para levantar':'b-purple','Levantado':'b-green','Entrega directa ao cliente':'b-green'};
   var rows = existentes.map(function(f,i){
-    var isDone = f.estado==='Levantado'||f.estado==='Entregue directo ao cliente';
+    var isDone = f.estado==='Levantado'||f.estado==='Entrega directa ao cliente';
     return '<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--rs);background:'+(isDone?'var(--forest-l)':'var(--surface2)')+';margin-bottom:4px;">'
       +'<div style="width:22px;height:22px;border-radius:50%;background:'+(isDone?'var(--forest)':'var(--border)')+';color:'+(isDone?'#fff':'var(--text3)')+';display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;">'+(isDone?'✓':(i+1))+'</div>'
       +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">'+esc(f.fornecedor)+'</div>'
