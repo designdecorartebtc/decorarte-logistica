@@ -1125,34 +1125,34 @@
         <div id="floral-board"></div>
       </div>
 
-<!-- COLABORADORES -->
-<div class="panel" id="panel-colaboradores">
-  <div class="alert-banner" style="margin-bottom:16px;">
-    Gestão interna dos perfis da equipa. Aqui podes editar nome, função e activar ou desactivar colaboradores sem perder histórico.
-  </div>
-  <div class="table-card">
-    <div class="table-toolbar">
-      <input class="si" placeholder="Pesquisar colaborador..." id="s-col" oninput="renderTable('col')">
-      <select class="fs" id="f-col-funcao" onchange="renderTable('col')">
-        <option value="">Todas as funções</option>
-        <option value="gestao_admin">Gestão / Administração</option>
-        <option value="administrativo">Administrativo</option>
-        <option value="administrativo_logistica">Administrativo / Logística</option>
-        <option value="floral">Floral</option>
-        <option value="entregas">Entregas</option>
-        <option value="design_interiores_logistica">Design de Interiores / Logística</option>
-      </select>
-      <select class="fs" id="f-col-ativo" onchange="renderTable('col')">
-        <option value="">Todos</option>
-        <option value="ativos">Activos</option>
-        <option value="inativos">Inactivos</option>
-      </select>
-    </div>
-    <table><thead><tr>
-      <th>Nome</th><th>Utilizador</th><th>Função</th><th>Estado</th><th>Criado em</th>
-    </tr></thead><tbody id="tb-col"></tbody></table>
-  </div>
-</div>
+      <!-- COLABORADORES -->
+      <div class="panel" id="panel-colaboradores">
+        <div class="alert-banner" style="margin-bottom:16px;">
+          Gestão interna dos perfis da equipa. Aqui podes editar nome, função e activar ou desactivar colaboradores sem perder histórico.
+        </div>
+        <div class="table-card">
+          <div class="table-toolbar">
+            <input class="si" placeholder="Pesquisar colaborador..." id="s-col" oninput="renderTable('col')">
+            <select class="fs" id="f-col-funcao" onchange="renderTable('col')">
+              <option value="">Todas as funções</option>
+              <option value="gestao_admin">Gestão / Administração</option>
+              <option value="administrativo">Administrativo</option>
+              <option value="administrativo_logistica">Administrativo / Logística</option>
+              <option value="floral">Floral</option>
+              <option value="entregas">Entregas</option>
+              <option value="design_interiores_logistica">Design de Interiores / Logística</option>
+            </select>
+            <select class="fs" id="f-col-ativo" onchange="renderTable('col')">
+              <option value="">Todos</option>
+              <option value="ativos">Activos</option>
+              <option value="inativos">Inactivos</option>
+            </select>
+          </div>
+          <table><thead><tr>
+            <th>Nome</th><th>Utilizador</th><th>Função</th><th>Estado</th><th>Criado em</th>
+          </tr></thead><tbody id="tb-col"></tbody></table>
+        </div>
+      </div>
 
       <!-- CLIENTES -->
       <div class="panel" id="panel-clientes">
@@ -1174,39 +1174,39 @@
         </div>
       </div>
 
-    </div>
-  </div>
-</div>
+      <!-- RECLAMAÇÕES -->
+      <div class="panel" id="panel-reclamacoes">
+        <div class="alert-banner" style="margin-bottom:16px;">
+          ◈ Gestão de reclamações pós-entrega — responsável, tipo de resolução e acompanhamento até ao fecho.
+        </div>
+        <div class="metrics" id="recl-metrics"></div>
+        <div class="table-card">
+          <div class="table-toolbar">
+            <input class="si" placeholder="Pesquisar cliente ou referência..." id="s-recl" oninput="renderReclamacoes()">
+            <select class="fs" id="f-recl-estado" onchange="renderReclamacoes()">
+              <option value="">Todos os estados</option>
+              <option>Registada</option><option>Aguarda recolha no cliente</option>
+              <option>Em reparação</option><option>Aguarda substituição</option>
+              <option>Pronto para entrega</option><option>Resolvida</option><option>Cancelada</option>
+            </select>
+            <select class="fs" id="f-recl-tipo" onchange="renderReclamacoes()">
+              <option value="">Todos os tipos</option>
+              <option>Reparação</option><option>Substituição</option><option>Nota de Crédito</option>
+            </select>
+            <select class="fs" id="f-recl-resp" onchange="renderReclamacoes()">
+              <option value="">Todos os responsáveis</option>
+              <option>Marlene</option><option>Raquel</option><option>Tânia</option><option>Evylleen</option>
+            </select>
+            <button class="btn btn-primary" onclick="openNewReclamacao()">+ Nova reclamação</button>
+          </div>
+          <table><thead><tr>
+            <th>Ref.</th><th>Cliente</th><th>Encomenda</th><th>Responsável</th>
+            <th>Tipo resolução</th><th>Estado</th><th>Registada em</th><th>Última actualização</th>
+          </tr></thead><tbody id="tb-recl"></tbody></table>
+        </div>
+      </div>
 
-<!-- RECLAMAÇÕES -->
-<div class="panel" id="panel-reclamacoes">
-  <div class="alert-banner" style="margin-bottom:16px;">
-    ◈ Gestão de reclamações pós-entrega — responsável, tipo de resolução e acompanhamento até ao fecho.
-  </div>
-  <div class="metrics" id="recl-metrics"></div>
-  <div class="table-card">
-    <div class="table-toolbar">
-      <input class="si" placeholder="Pesquisar cliente ou referência..." id="s-recl" oninput="renderReclamacoes()">
-      <select class="fs" id="f-recl-estado" onchange="renderReclamacoes()">
-        <option value="">Todos os estados</option>
-        <option>Registada</option><option>Aguarda recolha no cliente</option>
-        <option>Em reparação</option><option>Aguarda substituição</option>
-        <option>Pronto para entrega</option><option>Resolvida</option><option>Cancelada</option>
-      </select>
-      <select class="fs" id="f-recl-tipo" onchange="renderReclamacoes()">
-        <option value="">Todos os tipos</option>
-        <option>Reparação</option><option>Substituição</option><option>Nota de Crédito</option>
-      </select>
-      <select class="fs" id="f-recl-resp" onchange="renderReclamacoes()">
-        <option value="">Todos os responsáveis</option>
-        <option>Marlene</option><option>Raquel</option><option>Tânia</option><option>Evylleen</option>
-      </select>
-      <button class="btn btn-primary" onclick="openNewReclamacao()">+ Nova reclamação</button>
     </div>
-    <table><thead><tr>
-      <th>Ref.</th><th>Cliente</th><th>Encomenda</th><th>Responsável</th>
-      <th>Tipo resolução</th><th>Estado</th><th>Registada em</th><th>Última actualização</th>
-    </tr></thead><tbody id="tb-recl"></tbody></table>
   </div>
 </div>
 
@@ -3368,7 +3368,8 @@ function openModalForType(type, data){
       '<div class="fg"><label class="flabel">Data pedido</label><input class="finput" type="date" id="f-datapedido" value="'+esc(data.dataPedido||'')+'"></div>'+
       '<div class="fg"><label class="flabel">Limite de resposta</label><input class="finput" type="date" id="f-dataLimiteResposta" value="'+esc(data.dataLimiteResposta||'')+'"><div style="margin-top:6px;font-size:12px;color:var(--text3);">Obrigatório para pedidos do tipo Orçamento.</div></div>'+
       '<div class="fg"><label class="flabel">Data levantar</label><input class="finput" type="date" id="f-datalevantar" value="'+esc(data.dataLevantar||'')+'"></div>'+
-      '<div class="fg"><label class="flabel">Encomenda associada</label><select class="fselect" id="f-enc"><option value="">—</option>'+encOpts+'</select></div>'+
+      '<div class="fg"><label class="flabel">Encomenda associada</label><select class="fselect" id="f-enc" onchange="renderEncFornList()"><option value="">—</option>'+encOpts+'</select></div>'+
+      '<div class="fg full" id="enc-forn-list-wrap" style="display:none;"><div id="enc-forn-list"></div></div>'+
       '<div class="fg full"><label class="flabel">Morada fornecedor</label><input class="finput" id="f-morada" value="'+esc(data.morada||'')+'" placeholder="Morada de recolha"></div>'+
       '<div class="fg"><label class="flabel">Entrega directa ao cliente?</label><select class="fselect" id="f-directa"><option value="0" '+(!data.entregaDirecta?'selected':'')+'>Não</option><option value="1" '+(data.entregaDirecta?'selected':'')+'>Sim</option></select></div>'+
       '<div class="fg full"><label class="flabel">Anexos do projeto</label><input class="finput" type="file" id="f-anexos" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.dwg,.zip"><div style="margin-top:8px;font-size:12px;color:var(--text2);line-height:1.5;">Podes anexar projetos, renders, fichas técnicas e referências. Os ficheiros selecionados serão carregados automaticamente ao guardar este pedido.</div></div>'+
@@ -3415,6 +3416,7 @@ function openModalForType(type, data){
 
   setModalOpen(true);
   if(type==='enc'){ syncFloralFields(); if(data&&data.clienteId) setTimeout(function(){ prefillClientSearch(data.clienteId); },0); }
+  if(type==='forn') setTimeout(function(){ renderEncFornList(); },0);
   if(type==='forn') syncSupplierFields();
 }
 
@@ -4278,6 +4280,29 @@ function collabFilterOptions(){
   var opts='<option value="">Todos</option>';
   getCollaboratorNames().forEach(function(n){ opts+='<option>'+esc(n)+'</option>'; });
   return opts;
+}
+
+// ─── FORNECEDORES POR ENCOMENDA (modal) ──────────────────────────────────────
+function renderEncFornList(){
+  var encId = (document.getElementById('f-enc')||{value:''}).value;
+  var wrap = document.getElementById('enc-forn-list-wrap');
+  var list = document.getElementById('enc-forn-list');
+  if(!wrap||!list) return;
+  if(!encId){ wrap.style.display='none'; return; }
+  var existentes = DB.fornecedores.filter(function(f){ return f.encId===encId; });
+  if(!existentes.length){ wrap.style.display='none'; return; }
+  var FORN_CLS={'Aguarda confirmação':'b-gray','Confirmado':'b-blue','Pronto para levantar':'b-green','Levantado':'b-green','Entregue directo ao cliente':'b-amber'};
+  var rows = existentes.map(function(f,i){
+    var isDone = f.estado==='Levantado'||f.estado==='Entregue directo ao cliente';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--rs);background:'+(isDone?'var(--forest-l)':'var(--surface2)')+';margin-bottom:4px;">'
+      +'<div style="width:22px;height:22px;border-radius:50%;background:'+(isDone?'var(--forest)':'var(--border)')+';color:'+(isDone?'#fff':'var(--text3)')+';display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;">'+(isDone?'✓':(i+1))+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">'+esc(f.fornecedor)+'</div>'
+      +'<div style="font-size:11px;color:var(--text3);">'+esc(f.descricao||'—')+'</div></div>'
+      +'<span class="badge '+(FORN_CLS[f.estado]||'b-gray')+'">'+esc(f.estado)+'</span>'
+      +'</div>';
+  }).join('');
+  list.innerHTML = '<div style="margin-bottom:8px;font-size:12px;font-weight:600;color:var(--text2);">Fornecedores já ligados a esta encomenda ('+existentes.length+'):</div>'+rows;
+  wrap.style.display='block';
 }
 
 // ─── PESQUISA DE CLIENTES ─────────────────────────────────────────────────────
