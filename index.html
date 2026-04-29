@@ -3994,8 +3994,8 @@ function openDetail(type,id){
           +'</div>'
           +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
             +badge(f.estado||'Aguarda confirmação')
-            +(canAdvance?'<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();advanceFornStateFromEnc(''+f.id+'')" title="Avançar estado">→</button>':'')
-            +'<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();closeDetail();openDetail('forn',''+f.id+'')">Ver</button>'
+            +(canAdvance?'<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();advanceFornStateFromEnc(\''+f.id+'\')" title="Avançar estado">→</button>':'')
+            +'<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();closeDetail();openDetail(\'forn\',\''+f.id+'\')">Ver</button>'
           +'</div>'
           +'</div>';
       }).join('');
@@ -4003,9 +4003,9 @@ function openDetail(type,id){
       var doneForn=fornAssoc.filter(function(f){return f.estado==='Levantado'||f.estado==='Entregue directo ao cliente';}).length;
       var progBar='<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px;"><span>'+doneForn+' de '+totalForn+' fornecedores concluídos</span><span>'+Math.round(doneForn/totalForn*100)+'%</span></div><div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;"><div style="height:100%;background:var(--forest);border-radius:3px;width:'+Math.round(doneForn/totalForn*100)+'%;transition:width .3s;"></div></div></div>';
       body+=dsec('Fornecedores desta encomenda',progBar+'<div style="display:flex;flex-direction:column;gap:6px;">'+fornRows+'</div>'
-        +'<div style="margin-top:10px;"><button class="btn btn-ghost" style="font-size:12px;" onclick="event.stopPropagation();openModalForType('forn',{encId:''+e.id+''})">+ Adicionar fornecedor</button></div>');
+        +'<div style="margin-top:10px;"><button class="btn btn-ghost" style="font-size:12px;" onclick="event.stopPropagation();openModalForType(\'forn\',{encId:\''+e.id+'\'})">+ Adicionar fornecedor</button></div>');
     } else {
-      body+='<div style="margin-bottom:8px;"><button class="btn btn-ghost" style="font-size:12px;" onclick="event.stopPropagation();openModalForType('forn',{encId:''+e.id+''})">+ Adicionar fornecedor a esta encomenda</button></div>';
+      body+='<div style="margin-bottom:8px;"><button class="btn btn-ghost" style="font-size:12px;" onclick="event.stopPropagation();openModalForType(\'forn\',{encId:\''+e.id+'\'})">+ Adicionar fornecedor a esta encomenda</button></div>';
     }
     body += '<div class="dsec"><div class="dsec-title">Histórico</div><div id="order-history-loading" style="font-size:13px;color:var(--text3);">A carregar histórico...</div></div>';
     body += renderAuditSection(e);
