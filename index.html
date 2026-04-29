@@ -1043,6 +1043,9 @@
           <select class="fs" id="f-rota-localidade" onchange="renderRotas()">
             <option value="">Todas as localidades</option>
           </select>
+          <select class="fs" id="f-rota-data" onchange="renderRotas()" style="min-width:160px;">
+            <option value="">Todos os dias</option>
+          </select>
         </div>
         <div class="route-grid" id="route-grid"></div>
       </div>
@@ -1496,118 +1499,68 @@ async function loadDB(){
     return JSON.parse(JSON.stringify(EMPTY_DB));
   }
 }
+// ─── HELPERS DE PERSISTÊNCIA INDIVIDUAL ──────────────────────────────────────
+// Cada operação toca apenas no registo relevante. Nunca apaga a tabela inteira.
+
+function clienteToRow(c){
+  return { id:c.id, nome:c.nome, regiao:c.regiao, tipo:c.tipo, morada:c.morada,
+    contacto:c.contacto, responsavel:c.responsavel,
+    created_by:c.createdBy||null, updated_by:c.updatedBy||null,
+    created_at:c.createdAt||null, updated_at:c.updatedAt||null };
+}
+function encToRow(e){
+  return { id:e.id, cliente_id:e.clienteId||null, tipo:e.tipo, estado:e.estado,
+    ref_xd:e.refXD, localidade:e.localidade, morada:e.morada, notas:e.notas,
+    responsavel:e.responsavel, responsavel_floral:e.responsavelFloral,
+    entregador:e.entregador, faturacao:e.faturacao,
+    entrega:e.entrega||null, data_montagem:e.dataMontagem||null,
+    estado_floral:e.estadoFloral, equipa_montagem:Number(e.equipaMontagem||0),
+    tipo_montagem:e.tipoMontagem||null, notas_montagem:e.notasMontagem||null,
+    bloquear_agenda:!!e.bloquearAgenda, tem_montagem:!!e.temMontagem,
+    tem_floral:!!e.temFloral, faturado:!!e.faturado, pag_confirmado:!!e.pagConfirmado,
+    guia:!!e.guia, numero_guia:e.numeroGuia||null,
+    created_by:e.createdBy||null, updated_by:e.updatedBy||null,
+    created_at:e.createdAt||null, updated_at:e.updatedAt||null };
+}
+function fornToRow(f){
+  return { id:f.id, enc_id:f.encId||null, fornecedor:f.fornecedor,
+    num_ordem:f.numOrdem, tipo_pedido:f.tipoPedido, estado:f.estado,
+    descricao:f.descricao||null, data_pedido:f.dataPedido||null,
+    data_limite_resposta:f.dataLimiteResposta||null, data_levantar:f.dataLevantar||null,
+    localidade:f.localidade||null, cidade:f.cidade||null, morada:f.morada||null,
+    entrega_directa:!!f.entregaDirecta,
+    anexos:Array.isArray(f.anexos)?f.anexos:[],
+    created_by:f.createdBy||null, updated_by:f.updatedBy||null,
+    created_at:f.createdAt||null, updated_at:f.updatedAt||null };
+}
+
+async function upsertCliente(c){
+  const row = clienteToRow(c);
+  const { error } = await supabaseClient.from('clientes').upsert([row], { onConflict:'id' });
+  if(error) throw error;
+}
+async function upsertEncomenda(e){
+  const row = encToRow(e);
+  const { error } = await supabaseClient.from('encomendas').upsert([row], { onConflict:'id' });
+  if(error) throw error;
+}
+async function upsertFornecedor(f){
+  const row = fornToRow(f);
+  const { error } = await supabaseClient.from('fornecedores').upsert([row], { onConflict:'id' });
+  if(error) throw error;
+}
+async function deleteSupabaseRecord(table, id){
+  const { error } = await supabaseClient.from(table).delete().eq('id', id);
+  if(error) throw error;
+}
+
+// guardarDB — usado apenas ao criar/editar registos em lote (carregamento inicial não usa isto)
+// Opera em UPSERT sem DELETE da tabela — completamente seguro
 async function guardarDB(db){
   const safeDB = normaliseLoadedDB(db);
-
-  const clientesPayload = safeDB.clientes.map(function(c){
-    return {
-      id: c.id,
-      nome: c.nome,
-      regiao: c.regiao,
-      tipo: c.tipo,
-      morada: c.morada,
-      contacto: c.contacto,
-      responsavel: c.responsavel,
-      created_by: c.createdBy || null,
-      updated_by: c.updatedBy || null,
-      created_at: c.createdAt || null,
-      updated_at: c.updatedAt || null
-    };
-  });
-
-  const encomendasPayload = safeDB.encomendas.map(function(e){
-    return {
-      id: e.id,
-      cliente_id: e.clienteId || null,
-      tipo: e.tipo,
-      estado: e.estado,
-      ref_xd: e.refXD,
-      localidade: e.localidade,
-      morada: e.morada,
-      notas: e.notas,
-      responsavel: e.responsavel,
-      responsavel_floral: e.responsavelFloral,
-      entregador: e.entregador,
-      faturacao: e.faturacao,
-      entrega: e.entrega || null,
-      data_montagem: e.dataMontagem || null,
-      estado_floral: e.estadoFloral,
-      equipa_montagem: Number(e.equipaMontagem || 0),
-      tipo_montagem: e.tipoMontagem || null,
-      notas_montagem: e.notasMontagem || null,
-      bloquear_agenda: !!e.bloquearAgenda,
-      tem_montagem: !!e.temMontagem,
-      tem_floral: !!e.temFloral,
-      faturado: !!e.faturado,
-      pag_confirmado: !!e.pagConfirmado,
-      guia: !!e.guia,
-      numero_guia: e.numeroGuia || null,
-      created_by: e.createdBy || null,
-      updated_by: e.updatedBy || null,
-      created_at: e.createdAt || null,
-      updated_at: e.updatedAt || null
-    };
-  });
-
-  const fornecedoresPayload = safeDB.fornecedores.map(function(f){
-    return {
-      id: f.id,
-      enc_id: f.encId || null,
-      fornecedor: f.fornecedor,
-      num_ordem: f.numOrdem,
-      tipo_pedido: f.tipoPedido,
-      estado: f.estado,
-      descricao: f.descricao || null,
-      data_pedido: f.dataPedido || null,
-      data_limite_resposta: f.dataLimiteResposta || null,
-      data_levantar: f.dataLevantar || null,
-      localidade: f.localidade || null,
-      cidade: f.cidade || null,
-      morada: f.morada || null,
-      entrega_directa: !!f.entregaDirecta,
-      anexos: Array.isArray(f.anexos) ? f.anexos : [],
-      created_by: f.createdBy || null,
-      updated_by: f.updatedBy || null,
-      created_at: f.createdAt || null,
-      updated_at: f.updatedAt || null
-    };
-  });
-
-  const { error: deleteFornecedoresError } = await supabaseClient
-    .from('fornecedores')
-    .delete()
-    .neq('id', '__none__');
-
-  if(deleteFornecedoresError) throw deleteFornecedoresError;
-
-  const { error: deleteEncomendasError } = await supabaseClient
-    .from('encomendas')
-    .delete()
-    .neq('id', '__none__');
-
-  if(deleteEncomendasError) throw deleteEncomendasError;
-
-  const { error: deleteClientesError } = await supabaseClient
-    .from('clientes')
-    .delete()
-    .neq('id', '__none__');
-
-  if(deleteClientesError) throw deleteClientesError;
-
-  if(clientesPayload.length){
-    const { error } = await supabaseClient.from('clientes').insert(clientesPayload);
-    if(error) throw error;
-  }
-
-  if(encomendasPayload.length){
-    const { error } = await supabaseClient.from('encomendas').insert(encomendasPayload);
-    if(error) throw error;
-  }
-
-  if(fornecedoresPayload.length){
-    const { error } = await supabaseClient.from('fornecedores').insert(fornecedoresPayload);
-    if(error) throw error;
-  }
+  for(const c of safeDB.clientes){ await upsertCliente(c); }
+  for(const e of safeDB.encomendas){ await upsertEncomenda(e); }
+  for(const f of safeDB.fornecedores){ await upsertFornecedor(f); }
 }
 let SAVE_QUEUE = Promise.resolve();
 function persistDB(){
@@ -2177,9 +2130,16 @@ function refreshAll(){
   if(typeof renderReclamacoes==='function') renderReclamacoes();
   updateBadges();
 }
-async function saveAndRefresh(){
+// saveRecord: guarda um único registo sem tocar nos outros
+async function saveRecord(type, record){
+  if(type==='enc') await upsertEncomenda(record);
+  else if(type==='forn') await upsertFornecedor(record);
+  else if(type==='cli') await upsertCliente(record);
+}
+async function saveAndRefresh(type, record){
   try{
-    await persistDB();
+    if(type && record) await saveRecord(type, record);
+    else await guardarDB(DB); // fallback para compatibilidade
   }finally{
     refreshAll();
   }
@@ -2529,6 +2489,7 @@ function getFilteredEncRows(){
   const fe=(document.getElementById('f-enc-e')||{value:''}).value;
   const fr=(document.getElementById('f-enc-r')||{value:''}).value;
   return DB.encomendas.filter(function(e){return e.tipo!=='Orçamento';})
+    .filter(function(e){ return !isEntreguePago(e); }) // Excluir entregues e pagos — ficam na aba fecho
     .filter(function(e){return !fe||e.estado===fe;})
     .filter(function(e){return matchesResponsavelFiltro(e, fr);})
     .filter(function(e){return !s||String(e.refXD).toLowerCase().includes(s)||String(getCli(e.clienteId).nome).toLowerCase().includes(s);});
@@ -2802,7 +2763,9 @@ async function saveRecord(){
     window.__pendingSupplierAudit = { id: fornecedorId, acao: fornecedorAuditAction, dados: fornecedorAuditPayload };
 
     try{
-      await guardarDB(DB);
+      // Guarda apenas o fornecedor que acabou de ser criado/editado
+      const fornRecord = DB.fornecedores.find(function(f){ return f.id===fornecedorId; });
+      if(fornRecord) await upsertFornecedor(fornRecord);
     }catch(err){
       console.error(err);
       alert('Erro ao guardar o pedido no servidor: ' + (err && err.message ? err.message : 'erro desconhecido'));
@@ -2909,12 +2872,16 @@ async function saveRecord(){
   }
 
   try{
-    await guardarDB(DB);
+    // Guarda apenas o registo que mudou — não toca nos outros
     if(window.__pendingOrderAudit && window.__pendingOrderAudit.id){
+      const encRec = DB.encomendas.find(function(e){ return e.id===window.__pendingOrderAudit.id; });
+      if(encRec) await upsertEncomenda(encRec);
       await logOrderAudit(window.__pendingOrderAudit.id, window.__pendingOrderAudit.acao, window.__pendingOrderAudit.dados);
       window.__pendingOrderAudit = null;
     }
     if(window.__pendingClientAudit && window.__pendingClientAudit.id){
+      const cliRec = DB.clientes.find(function(c){ return c.id===window.__pendingClientAudit.id; });
+      if(cliRec) await upsertCliente(cliRec);
       await logGenericAudit('auditoria_clientes', 'cliente_id', window.__pendingClientAudit.id, window.__pendingClientAudit.acao, window.__pendingClientAudit.dados);
       window.__pendingClientAudit = null;
     }
@@ -3418,7 +3385,7 @@ function openModalForType(type, data){
     document.getElementById('modal-body').innerHTML='<div class="form-grid">'+
       '<div class="fg"><label class="flabel">Referência XD</label><input class="finput" id="f-refxd" value="'+esc(data.refXD||'')+'" placeholder="XD-2026-XXX"></div>'+
       '<div class="fg"><label class="flabel">Tipo</label><select class="fselect" id="f-tipo"><option '+(tipoVal==='Encomenda'?'selected':'')+'>Encomenda</option><option '+(tipoVal==='Orçamento'?'selected':'')+'>Orçamento</option><option '+(tipoVal==='Guia de transporte'?'selected':'')+'>Guia de transporte</option></select></div>'+
-      '<div class="fg full"><label class="flabel">Cliente</label><select class="fselect" id="f-cli"><option value="">Seleccionar...</option>'+cliOpts+'</select></div>'+
+      '<div class="fg full"><label class="flabel">Cliente</label><div style="position:relative;"><input class="finput" id="f-cli-search" placeholder="Pesquisar cliente..." autocomplete="off" oninput="filterClientDropdown()" onfocus="showClientDropdown()" onblur="setTimeout(hideClientDropdown,200)"><div id="f-cli-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;max-height:200px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);z-index:999;box-shadow:var(--sh-md);"></div></div><input type="hidden" id="f-cli"></div>'+
       '<div class="fg"><label class="flabel">Estado</label><select class="fselect" id="f-estado-enc">'+STATE_FLOW.concat(['Cancelado']).map(function(s){return '<option '+((data.estado||'Novo')===s?'selected':'')+'>'+s+'</option>';}).join('')+'</select></div>'+
       '<div class="fg"><label class="flabel">Responsável</label><select class="fselect" id="f-resp"><option '+((data.responsavel||'Marlene')==='Marlene'?'selected':'')+'>Marlene</option><option '+((data.responsavel||'')==='Raquel'?'selected':'')+'>Raquel</option><option '+((data.responsavel||'')==='Tânia'?'selected':'')+'>Tânia</option><option '+((data.responsavel||'')==='Evylleen'?'selected':'')+'>Evylleen</option><option '+((data.responsavel||'')==='Maria'?'selected':'')+'>Maria</option><option '+((data.responsavel||'')==='Juliander'?'selected':'')+'>Juliander</option><option '+((data.responsavel||'')==='Helder'?'selected':'')+'>Helder</option></select></div>'+
       '<div class="fg"><label class="flabel">Faturação</label><select class="fselect" id="f-fat">'+paymentOptions+'</select></div>'+
@@ -3447,7 +3414,7 @@ function openModalForType(type, data){
   }
 
   setModalOpen(true);
-  if(type==='enc') syncFloralFields();
+  if(type==='enc'){ syncFloralFields(); if(data&&data.clienteId) setTimeout(function(){ prefillClientSearch(data.clienteId); },0); }
   if(type==='forn') syncSupplierFields();
 }
 
@@ -3804,7 +3771,7 @@ async function advanceState(id){
   if(ci>=0&&ci<STATE_FLOW.length-1){
     e.estado=STATE_FLOW[ci+1];
     if(CURRENT_USER) e.updatedBy = CURRENT_USER.id;
-    await saveAndRefresh();
+    await saveAndRefresh('enc', e);
     await logOrderAudit(id, 'Estado alterado', {
       alteracoes: [
         { campo: 'Estado', anterior: anterior || '—', novo: e.estado || '—' }
@@ -3814,6 +3781,24 @@ async function advanceState(id){
   closeDetail();
 }
 
+async function advanceFornStateFromEnc(fornId){
+  // Avança o estado do fornecedor e reabre o detalhe da encomenda (não do fornecedor)
+  const f=getForn(fornId); if(!f) return;
+  const encId=f.encId;
+  const anterior = f.estado;
+  const ci=FORN_FLOW.indexOf(f.estado||'Aguarda confirmação');
+  if(ci>=0&&ci<FORN_FLOW.length-1){
+    f.estado=FORN_FLOW[ci+1];
+    if(CURRENT_USER) f.updatedBy = CURRENT_USER.id;
+    await saveRecord('forn', f);
+    await logGenericAudit('auditoria_fornecedores', 'fornecedor_id', fornId, 'Estado avançado', {
+      alteracoes:[{ campo:'Estado', anterior:anterior||'—', novo:f.estado||'—' }]
+    });
+    refreshAll();
+    if(encId) openDetail('enc', encId);
+  }
+}
+
 async function advanceFornState(id){
   const f=getForn(id); if(!f) return;
   const anterior = f.estado;
@@ -3821,7 +3806,7 @@ async function advanceFornState(id){
   if(ci>=0&&ci<FORN_FLOW.length-1){
     f.estado=FORN_FLOW[ci+1];
     if(CURRENT_USER) f.updatedBy = CURRENT_USER.id;
-    await saveAndRefresh();
+    await saveAndRefresh('forn', f);
     await logGenericAudit('auditoria_fornecedores', 'fornecedor_id', id, 'Estado do fornecedor alterado', {
       alteracoes: [
         { campo: 'Estado', anterior: anterior || '—', novo: f.estado || '—' }
@@ -3847,7 +3832,7 @@ function buildAgendaBlockedMessage(iso, actionLabel){
 }
 
 
-function deleteRecord(type,id){
+async function deleteRecord(type,id){
   let msg='Tem a certeza que quer eliminar este registo?';
   if(type==='cli'){
     const ligados=DB.encomendas.filter(function(e){return e.clienteId===id;}).length;
@@ -3861,16 +3846,21 @@ function deleteRecord(type,id){
   if(type==='forn') msg='Eliminar este pedido a fornecedor?';
   if(!confirm(msg)) return;
 
-  if(type==='cli') DB.clientes = DB.clientes.filter(function(c){return c.id!==id;});
-  if(type==='enc') DB.encomendas = DB.encomendas.filter(function(e){return e.id!==id;});
-  if(type==='forn') DB.fornecedores = DB.fornecedores.filter(function(f){return f.id!==id;});
-  persistDB().then(async function(){
-  
+  // Remove do Supabase directamente — sem tocar noutros registos
+  const tableMap = { cli:'clientes', enc:'encomendas', forn:'fornecedores' };
+  try{
+    await deleteSupabaseRecord(tableMap[type], id);
+  }catch(err){
+    alert('Erro ao eliminar: '+(err&&err.message?err.message:'erro desconhecido'));
+    return;
+  }
 
+  if(type==='cli') DB.clientes = DB.clientes.filter(function(c){return c.id!==id;});
   if(type==='enc'){
-      await logOrderAudit(id, 'Encomenda eliminada', { referencia: id });
-    }
-  });
+    DB.encomendas = DB.encomendas.filter(function(e){return e.id!==id;});
+    await logOrderAudit(id, 'Encomenda eliminada', { referencia: id });
+  }
+  if(type==='forn') DB.fornecedores = DB.fornecedores.filter(function(f){return f.id!==id;});
   closeDetail();
   refreshAll();
 }
@@ -3927,7 +3917,7 @@ async function markGuia(id){
   e.guia=true;
   if(CURRENT_USER) e.updatedBy = CURRENT_USER.id;
   if(e.estado==='Aguarda guia de transporte') e.estado='Pronto para entrega';
-  await saveAndRefresh();
+  await saveAndRefresh('enc', e);
   await logOrderAudit(id, 'Guia de transporte marcada', {
     alteracoes: [
       { campo: 'Guia de transporte', anterior: 'Em falta', novo: 'Feita' },
@@ -3982,6 +3972,41 @@ function openDetail(type,id){
       );
     }
     body += dsec('Notas', '<div style="font-size:13px;line-height:1.6;color:var(--text2);">'+esc(e.notas||'—')+'</div>');
+    // Fornecedores associados a esta encomenda — com ticks de progresso
+    var fornAssoc=DB.fornecedores.filter(function(f){return f.encId===e.id;});
+    if(fornAssoc.length){
+      var FORN_ESTADOS_ORDEM=['Aguarda confirmação','Confirmado','Pronto para levantar','Levantado','Entregue directo ao cliente'];
+      var fornRows=fornAssoc.map(function(f,idx){
+        var isDone=(f.estado==='Levantado'||f.estado==='Entregue directo ao cliente');
+        var tickColor=isDone?'var(--forest)':'var(--border)';
+        var tick=isDone
+          ?'<div style="width:28px;height:28px;border-radius:50%;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">✓</div>'
+          :'<div style="width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3);flex-shrink:0;">'+(idx+1)+'</div>';
+        var canAdvance=(FORN_FLOW.indexOf(f.estado||'Aguarda confirmação')<FORN_FLOW.length-1);
+        return '<div style="padding:10px 14px;border:1px solid '+(isDone?'var(--forest-l)':'var(--border)')
+          +';border-radius:var(--rs);background:'+(isDone?'var(--forest-l)':'var(--surface)')
+          +';display:flex;align-items:center;gap:12px;">'
+          +tick
+          +'<div style="flex:1;min-width:0;">'
+            +'<div style="font-weight:600;font-size:13px;'+(isDone?'color:var(--forest);':'')+'">'+esc(f.fornecedor)+'</div>'
+            +'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+esc(f.descricao||'—')+'</div>'
+            +(f.dataLevantar?'<div style="font-size:11px;color:var(--text2);margin-top:2px;">Levantar: '+fmtDate(f.dataLevantar)+'</div>':'')
+          +'</div>'
+          +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
+            +badge(f.estado||'Aguarda confirmação')
+            +(canAdvance?'<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();advanceFornStateFromEnc(''+f.id+'')" title="Avançar estado">→</button>':'')
+            +'<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();closeDetail();openDetail('forn',''+f.id+'')">Ver</button>'
+          +'</div>'
+          +'</div>';
+      }).join('');
+      var totalForn=fornAssoc.length;
+      var doneForn=fornAssoc.filter(function(f){return f.estado==='Levantado'||f.estado==='Entregue directo ao cliente';}).length;
+      var progBar='<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px;"><span>'+doneForn+' de '+totalForn+' fornecedores concluídos</span><span>'+Math.round(doneForn/totalForn*100)+'%</span></div><div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;"><div style="height:100%;background:var(--forest);border-radius:3px;width:'+Math.round(doneForn/totalForn*100)+'%;transition:width .3s;"></div></div></div>';
+      body+=dsec('Fornecedores desta encomenda',progBar+'<div style="display:flex;flex-direction:column;gap:6px;">'+fornRows+'</div>'
+        +'<div style="margin-top:10px;"><button class="btn btn-ghost" style="font-size:12px;" onclick="event.stopPropagation();openModalForType('forn',{encId:''+e.id+''})">+ Adicionar fornecedor</button></div>');
+    } else {
+      body+='<div style="margin-bottom:8px;"><button class="btn btn-ghost" style="font-size:12px;" onclick="event.stopPropagation();openModalForType('forn',{encId:''+e.id+''})">+ Adicionar fornecedor a esta encomenda</button></div>';
+    }
     body += '<div class="dsec"><div class="dsec-title">Histórico</div><div id="order-history-loading" style="font-size:13px;color:var(--text3);">A carregar histórico...</div></div>';
     body += renderAuditSection(e);
     footer += '<button class="btn btn-ghost" onclick="openEditModal(\'enc\',\''+e.id+'\')">Editar</button>';
@@ -4082,9 +4107,9 @@ function openDetail(type,id){
     var rIdx=RF.indexOf(r.estado||'Registada');
     var rCanAdv=rIdx>=0&&rIdx<RF.length-1&&r.estado!=='Cancelada';
     var rNext=rCanAdv?RF[rIdx+1]:'';
-    footer+='<button class="btn btn-ghost" onclick="openEditReclamacao(\'+r.id+\')">Editar</button>';
-    footer+='<button class="btn btn-ghost" onclick="deleteReclamacao(\'+r.id+\')">Eliminar</button>';
-    if(rCanAdv) footer+='<button class="btn btn-primary" onclick="advanceReclamacao(\'+r.id+\')">Avançar → '+esc(rNext)+'</button>';
+    footer+='<button class="btn btn-ghost" onclick="openEditReclamacao(\''+r.id+'\')">Editar</button>';
+    footer+='<button class="btn btn-ghost" onclick="deleteReclamacao(\''+r.id+'\')">Eliminar</button>';
+    if(rCanAdv) footer+='<button class="btn btn-primary" onclick="advanceReclamacao(\''+r.id+'\')">Avançar → '+esc(rNext)+'</button>';
   }
   document.getElementById('dp-body').innerHTML=body;
   document.getElementById('dp-footer').innerHTML=footer;
@@ -4092,9 +4117,25 @@ function openDetail(type,id){
   setTimeout(function(){ document.getElementById('detail').classList.add('open'); }, 10);
 }
 function getTodayRouteRows(){
+  var selDate = (document.getElementById('f-rota-data')||{value:''}).value;
   return DB.encomendas.filter(function(e){
-    return e.entrega && e.estado!=='Entregue' && e.estado!=='Cancelado' && e.entregador;
+    if(!e.entregador || e.estado==='Entregue' || e.estado==='Cancelado') return false;
+    if(!selDate) return !!(e.entrega || e.dataMontagem);
+    return (e.entrega===selDate) || (e.dataMontagem===selDate);
   });
+}
+
+function getRotaDateOptions(){
+  var dates = {};
+  DB.encomendas.forEach(function(e){
+    if(e.estado==='Entregue'||e.estado==='Cancelado') return;
+    if(e.entrega) dates[e.entrega]=true;
+    if(e.dataMontagem) dates[e.dataMontagem]=true;
+  });
+  DB.fornecedores.forEach(function(f){
+    if(f.dataLevantar && f.estado!=='Levantado') dates[f.dataLevantar]=true;
+  });
+  return Object.keys(dates).sort();
 }
 function setRouteView(view){
   ROUTE_VIEW=view;
@@ -4126,6 +4167,19 @@ function renderRotas(){
   if(localSelect){
     populateRouteLocalidades(routeData);
     if(localidade) localSelect.value=localidade;
+  }
+  // Popular selector de datas
+  var selDate=(document.getElementById('f-rota-data')||{value:''}).value;
+  var dateSelect=document.getElementById('f-rota-data');
+  if(dateSelect){
+    var allDates=getRotaDateOptions();
+    var prevVal=dateSelect.value;
+    dateSelect.innerHTML='<option value="">Todos os dias</option>'+allDates.map(function(d){
+      var label=fmtDate(d);
+      var today=toISODate(new Date());
+      if(d===today) label+=' (hoje)';
+      return '<option value="'+esc(d)+'" '+(d===prevVal?'selected':'')+'>'+label+'</option>';
+    }).join('');
   }
   if(ROUTE_SMART){
     rows.sort(function(a,b){
@@ -4226,6 +4280,47 @@ function collabFilterOptions(){
   return opts;
 }
 
+// ─── PESQUISA DE CLIENTES ─────────────────────────────────────────────────────
+function filterClientDropdown(){
+  var q=(document.getElementById('f-cli-search')||{value:''}).value.toLowerCase();
+  var dd=document.getElementById('f-cli-dropdown');
+  if(!dd) return;
+  var matches=DB.clientes.filter(function(c){
+    return !q || String(c.nome||'').toLowerCase().includes(q) || String(c.contacto||'').toLowerCase().includes(q);
+  }).slice(0,20);
+  dd.innerHTML=matches.map(function(c){
+    return '<div style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);" onmousedown="selectClientFromDropdown('+JSON.stringify(c.id)+','+JSON.stringify(c.nome)+')" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">'
+      +'<strong>'+esc(c.nome)+'</strong>'+(c.contacto?'<span style="color:var(--text3);font-size:11px;margin-left:6px;">'+esc(c.contacto)+'</span>':'')+'</div>';
+  }).join('');
+  dd.style.display=matches.length?'block':'none';
+}
+function showClientDropdown(){
+  var q=(document.getElementById('f-cli-search')||{value:''}).value;
+  if(!q) filterClientDropdown();
+  var dd=document.getElementById('f-cli-dropdown');
+  if(dd) dd.style.display='block';
+  filterClientDropdown();
+}
+function hideClientDropdown(){
+  var dd=document.getElementById('f-cli-dropdown');
+  if(dd) dd.style.display='none';
+}
+function selectClientFromDropdown(id,nome){
+  var inp=document.getElementById('f-cli');
+  var search=document.getElementById('f-cli-search');
+  if(inp) inp.value=id;
+  if(search) search.value=nome;
+  hideClientDropdown();
+}
+function prefillClientSearch(clienteId){
+  if(!clienteId) return;
+  var c=getCli(clienteId);
+  var inp=document.getElementById('f-cli');
+  var search=document.getElementById('f-cli-search');
+  if(inp) inp.value=clienteId;
+  if(search && c && c.nome) search.value=c.nome;
+}
+
 // ─── RECLAMAÇÕES ──────────────────────────────────────────────────────────────
 var RECL_FLOW=['Registada','Aguarda recolha no cliente','Em reparação','Aguarda substituição','Pronto para entrega','Resolvida'];
 var RECL_CLS={'Registada':'b-gray','Aguarda recolha no cliente':'b-amber','Em reparação':'b-blue','Aguarda substituição':'b-purple','Pronto para entrega':'b-green','Resolvida':'b-green','Cancelada':'b-red'};
@@ -4253,7 +4348,7 @@ function renderReclamacoes(){
   }
   mount.innerHTML=rows.length?rows.map(function(r){
     var cli=getCli(r.clienteId); var enc=getEnc(r.encId);
-    return '<tr style="cursor:pointer" onclick="openDetail(\'recl\',\'+r.id+\')"><td class="mono">'+esc(r.refRecl||'—')+'</td><td>'+esc(cli.nome||'—')+'</td><td class="muted">'+esc(enc?enc.refXD:'—')+'</td><td>'+esc(r.responsavel||'—')+'</td><td>'+(r.tipoResolucao?badge(r.tipoResolucao):'—')+'</td><td>'+badge(r.estado||'Registada',RECL_CLS[r.estado]||'b-gray')+'</td><td class="muted">'+fmtDate((r.createdAt||'').split('T')[0])+'</td><td class="muted">'+fmtDate((r.updatedAt||'').split('T')[0])+'</td></tr>';
+    return '<tr style="cursor:pointer" onclick="openDetail(\'recl\',\''+r.id+'\')"><td class="mono">'+esc(r.refRecl||'—')+'</td><td>'+esc(cli.nome||'—')+'</td><td class="muted">'+esc(enc?enc.refXD:'—')+'</td><td>'+esc(r.responsavel||'—')+'</td><td>'+(r.tipoResolucao?badge(r.tipoResolucao):'—')+'</td><td>'+badge(r.estado||'Registada',RECL_CLS[r.estado]||'b-gray')+'</td><td class="muted">'+fmtDate((r.createdAt||'').split('T')[0])+'</td><td class="muted">'+fmtDate((r.updatedAt||'').split('T')[0])+'</td></tr>';
   }).join(''):'<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text3);">Sem reclamações registadas.</td></tr>';
   updateBadgesRecl();
 }
