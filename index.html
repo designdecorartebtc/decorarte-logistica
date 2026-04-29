@@ -4288,10 +4288,14 @@ function filterClientDropdown(){
   var matches=DB.clientes.filter(function(c){
     return !q || String(c.nome||'').toLowerCase().includes(q) || String(c.contacto||'').toLowerCase().includes(q);
   }).slice(0,20);
-  dd.innerHTML=matches.map(function(c){
-    return '<div style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);" onmousedown="selectClientFromDropdown('+JSON.stringify(c.id)+','+JSON.stringify(c.nome)+')" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">'
-      +'<strong>'+esc(c.nome)+'</strong>'+(c.contacto?'<span style="color:var(--text3);font-size:11px;margin-left:6px;">'+esc(c.contacto)+'</span>':'')+'</div>';
-  }).join('');
+  var html='';
+  matches.forEach(function(c){
+    var extra=c.contacto?'<span style="color:var(--text3);font-size:11px;margin-left:6px;">'+esc(c.contacto)+'</span>':'';
+    html+='<div style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);" onmousedown="selectClientFromDropdown(this)"'
+         +' data-id="'+esc(c.id)+'" data-nome="'+esc(c.nome)+'">'
+         +'<strong>'+esc(c.nome)+'</strong>'+extra+'</div>';
+  });
+  dd.innerHTML=html;
   dd.style.display=matches.length?'block':'none';
 }
 function showClientDropdown(){
@@ -4305,7 +4309,9 @@ function hideClientDropdown(){
   var dd=document.getElementById('f-cli-dropdown');
   if(dd) dd.style.display='none';
 }
-function selectClientFromDropdown(id,nome){
+function selectClientFromDropdown(el){
+  var id=el.getAttribute('data-id');
+  var nome=el.getAttribute('data-nome');
   var inp=document.getElementById('f-cli');
   var search=document.getElementById('f-cli-search');
   if(inp) inp.value=id;
