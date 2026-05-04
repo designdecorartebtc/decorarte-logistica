@@ -3801,9 +3801,7 @@ async function advanceFornStateFromEnc(fornId){
       var msg2='⚠ '+f.fornecedor+' está pronto para levantar!'
         +(enc2?' ('+enc2.refXD+')':'')
         +(f.dataLevantar?' — Data prevista: '+fmtDate(f.dataLevantar):'')
-        +'
-
-Não te esqueças de incluir na rota.';
+        +'\n\nNão te esqueças de incluir na rota.';
       setTimeout(function(){ alert(msg2); }, 200);
     }
     refreshAll();
