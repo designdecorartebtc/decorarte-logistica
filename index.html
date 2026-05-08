@@ -809,7 +809,7 @@
       <button class="nav-item" onclick="showPanel('orcamentos')"><span class="icon">◫</span> Orçamentos <span class="nb a" id="nb-orc">0</span></button>
       <div class="nav-sec">Logística</div>
       <button class="nav-item" onclick="showPanel('fornecedores')"><span class="icon">⬡</span> Fornecedores <span class="nb" id="nb-forn">0</span></button>
-      <button class="nav-item" onclick="showPanel('entregas')"><span class="icon">◎</span> Entregas <span class="nb g" id="nb-ent">0</span></button>
+      <button class="nav-item" onclick="showPanel('epend')"><span class="icon">◎</span> Entregas pendentes <span class="nb a" id="nb-epend">0</span></button>
       <button class="nav-item" onclick="showPanel('nao-faturadas')"><span class="icon">◔</span> Não faturadas <span class="nb a" id="nb-nfat">0</span></button>
       <button class="nav-item" onclick="showPanel('fecho')"><span class="icon">◒</span> Entregues e pagos <span class="nb g" id="nb-fecho">0</span></button>
       <button class="nav-item" onclick="showPanel('guias')"><span class="icon">◑</span> Guias em falta <span class="nb a" id="nb-guia">0</span></button>
@@ -874,9 +874,7 @@
             <select class="fs" id="f-enc-e" onchange="renderTable('enc')">
               <option value="">Todos os estados</option>
               <option>Novo</option><option>Verificado — Tânia</option><option>Aguarda fornecedor</option>
-              <option>Aguarda aprovação cliente</option><option>Confirmado</option>
-              <option>Aguarda guia de transporte</option><option>Pronto para entrega</option>
-              <option>Em rota</option><option>Entregue</option>
+              <option>Aguarda aprovação cliente</option>
             </select>
             <select class="fs" id="f-enc-r" onchange="renderTable('enc')">
               <option value="">Todos</option>
@@ -947,25 +945,39 @@
         </div>
       </div>
 
-      <!-- ENTREGAS -->
-      <div class="panel" id="panel-entregas">
-        <div id="alert-ent"></div>
+      <!-- ENTREGA PENDENTE -->
+      <div class="panel" id="panel-epend">
+        <div id="alert-epend"></div>
         <div class="table-card">
           <div class="table-toolbar">
-            <input class="si" placeholder="Pesquisar..." id="s-ent" oninput="renderTable('ent')">
-            <select class="fs" id="f-ent-entregador" onchange="renderTable('ent')">
-              <option value="">Todos entregadores</option>
+            <input class="si" placeholder="Pesquisar..." id="s-epend" oninput="renderTable('epend')">
+            <select class="fs" id="f-epend-estado" onchange="renderTable('epend')">
+              <option value="">Todos os estados</option>
+              <option>Confirmado</option>
+              <option>Aguarda guia de transporte</option>
+              <option>Pronto para entrega</option>
+              <option>Em rota</option>
+            </select>
+            <select class="fs" id="f-epend-r" onchange="renderTable('epend')">
+              <option value="">Todos os responsáveis</option>
+              <option>Marlene</option><option>Raquel</option><option>Tânia</option><option>Evylleen</option><option>Maria</option><option>Juliander</option><option>Helder</option>
+            </select>
+            <select class="fs" id="f-epend-entregador" onchange="renderTable('epend')">
+              <option value="">Todos os entregadores</option>
               <option>Juliander</option><option>Helder</option><option>CTT</option><option>Transitário</option><option>Cliente levanta no showroom</option>
             </select>
           </div>
-          <table><thead><tr>
-            <th>Ref. XD</th><th>Cliente</th><th>Estado</th>
+          <table id="t-epend"><thead id="th-epend"><tr>
+            <th style="cursor:pointer;user-select:none;" onclick="toggleSort('epend','refXD')">Ref. XD<span id="sa-epend-refXD" style="color:var(--border-s);margin-left:3px;font-size:9px;">⇅</span></th>
+            <th style="cursor:pointer;user-select:none;" onclick="toggleSort('epend','cliente')">Cliente<span id="sa-epend-cliente" style="color:var(--border-s);margin-left:3px;font-size:9px;">⇅</span></th>
+            <th>Estado</th>
             <th>Faturação</th><th>Pag. confirmado</th>
-            <th>Entregador</th><th>Guia transp.</th><th>Morada</th>
-          </tr></thead><tbody id="tb-ent"></tbody></table>
+            <th>Entregador</th><th>Guia transp.</th>
+            <th style="cursor:pointer;user-select:none;" onclick="toggleSort('epend','entrega')">Entrega prev.<span id="sa-epend-entrega" style="color:var(--border-s);margin-left:3px;font-size:9px;">⇅</span></th>
+            <th>Morada</th>
+          </tr></thead><tbody id="tb-epend"></tbody></table>
         </div>
       </div>
-
 
       <!-- ENTREGUE MAS NÃO FATURADO -->
       <div class="panel" id="panel-nao-faturadas">
@@ -1598,6 +1610,51 @@ const DELIVERY_OPTIONS = ['Juliander','Helder','CTT','Transitário','Cliente lev
 const PAYMENT_OPTIONS = ['Pagar antes','Crédito — faturar depois','Pago — cheque','Pago — transferência','Pago — numerário'];
 const FLORAL_FLOW = ['Novo pedido','Em produção','Finalizado','Pronto para entrega'];
 
+// ─── SORT STATE ───────────────────────────────────────────────────────────────
+var SORT_STATE = {
+  enc:  { col: null, dir: 'asc' },
+  forn: { col: null, dir: 'asc' },
+  ent:  { col: null, dir: 'asc' },
+  epend: { col: null, dir: 'asc' }
+};
+function toggleSort(table, col){
+  if(SORT_STATE[table].col === col){
+    SORT_STATE[table].dir = SORT_STATE[table].dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    SORT_STATE[table].col = col;
+    SORT_STATE[table].dir = 'asc';
+  }
+  renderTable(table);
+}
+function sortRows(rows, table){
+  var s = SORT_STATE[table];
+  if(!s || !s.col) return rows;
+  var col = s.col;
+  var dir = s.dir === 'asc' ? 1 : -1;
+  return rows.slice().sort(function(a, b){
+    var va = '', vb = '';
+    if(col === 'cliente')   { va = getCli(a.clienteId).nome||''; vb = getCli(b.clienteId).nome||''; }
+    else if(col === 'fornecedor') { va = a.fornecedor||''; vb = b.fornecedor||''; }
+    else if(col === 'refXD') { va = a.refXD||''; vb = b.refXD||''; }
+    else if(col === 'dataPedido') { va = a.dataPedido||''; vb = b.dataPedido||''; }
+    else if(col === 'dataLevantar') { va = a.dataLevantar||''; vb = b.dataLevantar||''; }
+    else if(col === 'dataLimiteResposta') { va = a.dataLimiteResposta||''; vb = b.dataLimiteResposta||''; }
+    else if(col === 'entrega') { va = a.entrega||''; vb = b.entrega||''; }
+    else if(col === 'estado') { va = a.estado||''; vb = b.estado||''; }
+    else if(col === 'responsavel') { va = a.responsavel||''; vb = b.responsavel||''; }
+    var cmp = va.localeCompare(vb, 'pt', { sensitivity: 'base' });
+    return cmp * dir;
+  });
+}
+function sortArrow(table, col){
+  var s = SORT_STATE[table];
+  if(s.col !== col) return '<span style="color:var(--border-s);margin-left:3px;font-size:9px;">⇅</span>';
+  return '<span style="color:var(--gold-m);margin-left:3px;font-size:9px;">'+(s.dir==='asc'?'↑':'↓')+'</span>';
+}
+function thSort(table, col, label){
+  return '<th style="cursor:pointer;user-select:none;" onclick="toggleSort(\''+table+'\',\''+col+'\')">'+label+sortArrow(table,col)+'</th>';
+}
+
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function getCli(id){return DB.clientes.find(function(c){return c.id===id;})||{nome:'—',regiao:'',tipo:'Normal',morada:'',contacto:'',responsavel:''};}
 function getEnc(id){return DB.encomendas.find(function(e){return e.id===id;})||null;}
@@ -1930,7 +1987,7 @@ function diffSupplierChanges(previousData, nextData){
   return diffs;
 }
 function faturadoBadge(v){ return v ? badge('Sim','b-green') : badge('Não','b-red'); }
-function isEntregueNaoFaturado(e){ return e.tipo==='Encomenda' && e.estado==='Entregue' && !e.faturado; }
+function isEntregueNaoFaturado(e){ return e.tipo==='Encomenda' && e.estado==='Entregue' && !e.faturado && !e.pagConfirmado; }
 function isEntreguePago(e){ return e.tipo==='Encomenda' && e.estado==='Entregue' && !!e.pagConfirmado; }
 function supplierRequestType(f){ return f && f.tipoPedido ? f.tipoPedido : 'Encomenda'; }
 function isSupplierQuoteOverdue(f){
@@ -2123,7 +2180,7 @@ async function deleteSupplierAttachment(fornecedorId, ficheiro){
 }
 function refreshAll(){
   renderDashboard();
-  renderTable('enc'); renderTable('orc'); renderTable('forn'); renderTable('ent'); renderTable('nfat'); renderTable('fecho'); renderTable('guia'); renderTable('cli');
+  renderTable('enc'); renderTable('orc'); renderTable('forn'); renderTable('epend'); renderTable('nfat'); renderTable('fecho'); renderTable('guia'); renderTable('cli');
   renderRotas();
   renderCalendar();
   renderFloral();
@@ -2311,11 +2368,11 @@ function showPanel(name){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
   const panel=document.getElementById('panel-'+name);
   if(panel) panel.classList.add('active');
-  const map={dashboard:0,encomendas:1,orcamentos:2,fornecedores:3,entregas:4,'nao-faturadas':5,fecho:6,guias:7,calendario:8,rotas:9,floral:10,reclamacoes:11,clientes:12,colaboradores:13};
+  const map={dashboard:0,encomendas:1,orcamentos:2,fornecedores:3,epend:4,'nao-faturadas':5,fecho:6,guias:7,calendario:8,rotas:9,floral:10,reclamacoes:11,clientes:12,colaboradores:13};
   const navItem=document.querySelectorAll('.nav-item')[map[name]];
   if(navItem) navItem.classList.add('active');
   const titles={dashboard:'Dashboard',encomendas:'Encomendas',orcamentos:'Orçamentos',
-    fornecedores:'Fornecedores',entregas:'Entregas','nao-faturadas':'Entregue mas não faturado',fecho:'Entregues e pagos',guias:'Guias em falta',
+    fornecedores:'Fornecedores',epend:'Entregas pendentes','nao-faturadas':'Entregue mas não faturado',fecho:'Entregues e pagos',guias:'Guias em falta',
     calendario:'Calendário',rotas:'Rotas do dia',floral:'Módulo floral',reclamacoes:'Reclamações',clientes:'Clientes',colaboradores:'Colaboradores'};
   document.getElementById('topbar-title').textContent=titles[name]||name;
   if(name==='calendario') renderCalendar();
@@ -2326,7 +2383,7 @@ function showPanel(name){
   else if(name==='encomendas') renderTable('enc');
   else if(name==='orcamentos') renderTable('orc');
   else if(name==='fornecedores') renderTable('forn');
-  else if(name==='entregas') renderTable('ent');
+  else if(name==='epend') renderTable('epend');
   else if(name==='nao-faturadas') renderTable('nfat');
   else if(name==='fecho') renderTable('fecho');
   else if(name==='guias') renderTable('guia');
@@ -2337,13 +2394,26 @@ function showPanel(name){
 // ─── BADGES UPDATE ────────────────────────────────────────────────────────────
 function updateBadges(){
   const enc=DB.encomendas;
-  document.getElementById('nb-enc').textContent=enc.filter(function(e){return e.tipo!=='Orçamento'&&e.estado!=='Entregue'&&e.estado!=='Cancelado';}).length;
+  const EXCL_ESTADOS_ENC = ['Confirmado','Aguarda guia de transporte','Pronto para entrega','Em rota','Entregue'];
+  // Encomendas: apenas estados pré-confirmação, excluindo fechados
+  const encAtivas = enc.filter(function(e){
+    return e.tipo!=='Orçamento'
+      && !isEntreguePago(e)
+      && !isEntregueNaoFaturado(e)
+      && !EXCL_ESTADOS_ENC.includes(e.estado)
+      && e.estado!=='Cancelado';
+  }).length;
+  document.getElementById('nb-enc').textContent=encAtivas;
   document.getElementById('nb-orc').textContent=enc.filter(function(e){return e.tipo==='Orçamento'&&e.estado!=='Entregue'&&e.estado!=='Cancelado';}).length;
   const fornAtivos=DB.fornecedores.filter(function(f){return f.estado!=='Levantado'&&f.estado!=='Entrega directa ao cliente';}).length;
   const fornAtrasados=DB.fornecedores.filter(function(f){ return isSupplierQuoteOverdue(f); }).length;
   document.getElementById('nb-forn').textContent=fornAtivos;
   document.getElementById('nb-forn').className='nb'+(fornAtrasados>0?' a':'');
-  document.getElementById('nb-ent').textContent=enc.filter(function(e){return e.estado==='Pronto para entrega';}).length;
+  // Entregas pendentes: Confirmado + Aguarda guia + Pronto + Em rota
+  const EPEND_ESTADOS = ['Confirmado','Aguarda guia de transporte','Pronto para entrega','Em rota'];
+  const epend=enc.filter(function(e){return EPEND_ESTADOS.includes(e.estado)&&!isEntreguePago(e)&&!isEntregueNaoFaturado(e);}).length;
+  document.getElementById('nb-epend').textContent=epend;
+  document.getElementById('nb-epend').className='nb'+(epend>0?' a':' g');
   const naoFat=enc.filter(function(e){return isEntregueNaoFaturado(e);}).length;
   document.getElementById('nb-nfat').textContent=naoFat;
   document.getElementById('nb-nfat').className='nb'+(naoFat>0?' a':'');
@@ -2453,7 +2523,9 @@ function renderDashboard(){
   document.getElementById('dash-flow').innerHTML=steps.map(function(s){
     const n=enc.filter(function(e){return e.estado===s;}).length;
     const isGuia=s==='Aguarda guia de transporte';
-    return '<div class="fs-step" onclick="showPanel(\''+(isGuia?'guias':'encomendas')+'\')" style="'+(isGuia&&n>0?'background:var(--amber-l);':'')+'">'+
+    const isEpend=['Confirmado','Aguarda guia de transporte','Pronto para entrega','Em rota'].includes(s);
+    const target=isGuia?'guias':(isEpend?'epend':'encomendas');
+    return '<div class="fs-step" onclick="showPanel(\''+target+'\')" style="'+(isGuia&&n>0?'background:var(--amber-l);':'')+'">'+
       '<div class="fsn" style="'+(isGuia&&n>0?'color:var(--amber);':'')+'">'+n+'</div>'+
       '<div class="fsl">'+esc(s)+'</div>'+(n>0?'<div class="fsc">'+n+'</div>':'')+'</div>';
   }).join('');
@@ -2488,8 +2560,12 @@ function getFilteredEncRows(){
   const s=(document.getElementById('s-enc')||{value:''}).value.toLowerCase();
   const fe=(document.getElementById('f-enc-e')||{value:''}).value;
   const fr=(document.getElementById('f-enc-r')||{value:''}).value;
+  // EXCLUSÕES: entregues+pagos (fecho), entregues não faturados (nao-faturadas), confirmados (entrega pendente)
+  const EXCL_ESTADOS = ['Confirmado','Aguarda guia de transporte','Pronto para entrega','Em rota','Entregue'];
   return DB.encomendas.filter(function(e){return e.tipo!=='Orçamento';})
-    .filter(function(e){ return !isEntreguePago(e); }) // Excluir entregues e pagos — ficam na aba fecho
+    .filter(function(e){ return !isEntreguePago(e); })
+    .filter(function(e){ return !isEntregueNaoFaturado(e); })
+    .filter(function(e){ return !EXCL_ESTADOS.includes(e.estado); })
     .filter(function(e){return !fe||e.estado===fe;})
     .filter(function(e){return matchesResponsavelFiltro(e, fr);})
     .filter(function(e){return !s||String(e.refXD).toLowerCase().includes(s)||String(getCli(e.clienteId).nome).toLowerCase().includes(s);});
@@ -2516,10 +2592,18 @@ function getFilteredFornRows(){
       return !s || hay.includes(s);
     });
 }
-function getFilteredEntRows(){
-  const s=(document.getElementById('s-ent')||{value:''}).value.toLowerCase();
-  const fe=(document.getElementById('f-ent-entregador')||{value:''}).value;
-  return DB.encomendas.filter(function(e){return ['Pronto para entrega','Em rota','Confirmado'].includes(e.estado);})
+function getFilteredEpendRows(){
+  const s=(document.getElementById('s-epend')||{value:''}).value.toLowerCase();
+  const fr=(document.getElementById('f-epend-r')||{value:''}).value;
+  const fe=(document.getElementById('f-epend-entregador')||{value:''}).value;
+  const fest=(document.getElementById('f-epend-estado')||{value:''}).value;
+  // Entregas pendentes = Confirmado + Aguarda guia + Pronto para entrega + Em rota
+  const EPEND_ESTADOS = ['Confirmado','Aguarda guia de transporte','Pronto para entrega','Em rota'];
+  return DB.encomendas.filter(function(e){return EPEND_ESTADOS.includes(e.estado);})
+    .filter(function(e){ return !isEntreguePago(e); })
+    .filter(function(e){ return !isEntregueNaoFaturado(e); })
+    .filter(function(e){return !fest||e.estado===fest;})
+    .filter(function(e){return !fr||matchesResponsavelFiltro(e,fr);})
     .filter(function(e){return !fe||e.entregador===fe;})
     .filter(function(e){return !s||String(getCli(e.clienteId).nome).toLowerCase().includes(s)||String(e.refXD).toLowerCase().includes(s);});
 }
@@ -2570,19 +2654,25 @@ function clearVisibleSelection(kind){
   rows.forEach(function(e){ SELECTED_ENC_IDS.delete(e.id); });
   renderTable(kind);
 }
-function deleteSelectedOrders(kind){
+async function deleteSelectedOrders(kind){
   const rows=kind==='enc' ? getFilteredEncRows() : getFilteredOrcRows();
   const ids=rows.filter(function(e){ return SELECTED_ENC_IDS.has(e.id); }).map(function(e){ return e.id; });
   if(!ids.length){
     alert(kind==='enc' ? 'Seleccione pelo menos uma encomenda.' : 'Seleccione pelo menos um orçamento.');
     return;
   }
-  if(!confirm('Eliminar '+ids.length+' registo(s) seleccionados?')) return;
-  DB.encomendas = DB.encomendas.filter(function(e){ return !ids.includes(e.id); });
-  ids.forEach(function(id){ SELECTED_ENC_IDS.delete(id); });
-  persistDB();
-  closeDetail();
-  refreshAll();
+  if(!confirm('Eliminar '+ids.length+' registo(s) seleccionados? Esta acção não pode ser revertida.')) return;
+  try{
+    for(const id of ids){
+      await deleteSupabaseRecord('encomendas', id);
+    }
+    DB.encomendas = DB.encomendas.filter(function(e){ return !ids.includes(e.id); });
+    ids.forEach(function(id){ SELECTED_ENC_IDS.delete(id); });
+    closeDetail();
+    refreshAll();
+  }catch(err){
+    alert('Erro ao eliminar: '+(err&&err.message?err.message:'erro desconhecido'));
+  }
 }
 function renderFechoMetrics(rows){
   const mount=document.getElementById('fecho-metrics');
@@ -3315,6 +3405,7 @@ function openNewModal(){
   if(panel==='clientes') return openModalForType('cli');
   if(panel==='colaboradores') return alert('A criação de novos acessos será ligada ao backend seguro no Vercel. Nesta fase, esta área gere perfis existentes.');
   if(panel==='fornecedores') return openModalForType('forn');
+  if(panel==='epend') return openModalForType('enc');
   if(panel==='orcamentos') return openModalForType('enc',{tipo:'Orçamento'});
   if(panel==='floral') return openModalForType('enc',{temFloral:true,responsavelFloral:'Maria',estadoFloral:'Novo pedido'});
   if(panel==='reclamacoes') return openNewReclamacao();
@@ -3466,7 +3557,21 @@ function getFilteredCollaborators(){
 function renderTable(type){
 
   if(type==='enc'){
-    const rows=getFilteredEncRows();
+    const rows=sortRows(getFilteredEncRows(),'enc');
+    // Update table header with sortable columns
+    var thEnc = document.querySelector('#panel-encomendas thead tr');
+    if(thEnc){
+      thEnc.innerHTML =
+        '<th class="table-check"><input type="checkbox" class="check-input" id="check-all-enc" onclick="event.stopPropagation();toggleSelectAllVisible(\'enc\', this.checked)"></th>'+
+        '<th style="cursor:pointer;user-select:none;" onclick="toggleSort(\'enc\',\'refXD\')">Ref. XD'+sortArrow('enc','refXD')+'</th>'+
+        '<th style="cursor:pointer;user-select:none;" onclick="toggleSort(\'enc\',\'cliente\')">Cliente'+sortArrow('enc','cliente')+'</th>'+
+        '<th>Tipo</th>'+
+        '<th style="cursor:pointer;user-select:none;" onclick="toggleSort(\'enc\',\'estado\')">Estado'+sortArrow('enc','estado')+'</th>'+
+        '<th>Faturação</th>'+
+        '<th>Entregador</th>'+
+        '<th style="cursor:pointer;user-select:none;" onclick="toggleSort(\'enc\',\'entrega\')">Entrega prev.'+sortArrow('enc','entrega')+'</th>'+
+        '<th style="cursor:pointer;user-select:none;" onclick="toggleSort(\'enc\',\'responsavel\')">Responsável'+sortArrow('enc','responsavel')+'</th>';
+    }
     document.getElementById('tb-enc').innerHTML=rows.length?rows.map(function(e){
       const cli=getCli(e.clienteId);
       const isGuia=e.estado==='Aguarda guia de transporte'&&!e.guia;
@@ -3503,10 +3608,25 @@ function renderTable(type){
   }
 
   if(type==='forn'){
-    const rows=getFilteredFornRows();
+    const rows=sortRows(getFilteredFornRows(),'forn');
     const atrasados=rows.filter(function(f){ return isSupplierQuoteOverdue(f); });
     const alertEl=document.getElementById('alert-forn');
     if(alertEl) alertEl.innerHTML=atrasados.length?'<div class="alert-banner danger">⚠ '+atrasados.length+' orçamento(s) de fornecedor ultrapassaram a data limite de resposta.</div>':'';
+    // Update table header with sortable columns
+    var thForn = document.querySelector('#panel-fornecedores thead tr');
+    if(thForn){
+      thForn.innerHTML =
+        '<th style="cursor:pointer;user-select:none;" onclick="toggleSort(\'forn\',\'fornecedor\')">Fornecedor'+sortArrow('forn','fornecedor')+'</th>'+
+        '<th>Tipo</th>'+
+        '<th>Nº Ordem</th>'+
+        '<th>Descrição</th>'+
+        '<th style="cursor:pointer;user-select:none;" onclick="toggleSort(\'forn\',\'estado\')">Estado'+sortArrow('forn','estado')+'</th>'+
+        '<th style="cursor:pointer;user-select:none;" onclick="toggleSort(\'forn\',\'dataPedido\')">Data pedido'+sortArrow('forn','dataPedido')+'</th>'+
+        '<th style="cursor:pointer;user-select:none;" onclick="toggleSort(\'forn\',\'dataLimiteResposta\')">Limite resposta'+sortArrow('forn','dataLimiteResposta')+'</th>'+
+        '<th style="cursor:pointer;user-select:none;" onclick="toggleSort(\'forn\',\'dataLevantar\')">Levantar em'+sortArrow('forn','dataLevantar')+'</th>'+
+        '<th>Ligação</th>'+
+        '<th>Alerta</th>';
+    }
     document.getElementById('tb-forn').innerHTML=rows.length?rows.map(function(f){
       const enc=getEnc(f.encId);
       const late=isSupplierQuoteOverdue(f);
@@ -3525,22 +3645,40 @@ function renderTable(type){
     return;
   }
 
-  if(type==='ent'){
-    const rows=getFilteredEntRows();
+  if(type==='epend'){
+    const rows=sortRows(getFilteredEpendRows(),'epend');
     const semPag=rows.filter(function(e){return !e.pagConfirmado&&e.faturacao==='Pagar antes';});
-    const alertEl=document.getElementById('alert-ent');
-    if(alertEl) alertEl.innerHTML=semPag.length?'<div class="alert-banner danger">⚠ '+semPag.length+' entrega(s) bloqueada(s) — aguardam pagamento.</div>':'';
-    document.getElementById('tb-ent').innerHTML=rows.length?rows.map(function(e){
+    const alertEl=document.getElementById('alert-epend');
+    if(alertEl){
+      var msgs=[];
+      if(semPag.length) msgs.push('⚠ '+semPag.length+' entrega(s) aguardam pagamento antes de entrar em rota.');
+      const semGuia=rows.filter(function(e){return !e.guia&&e.entregador;}).length;
+      if(semGuia) msgs.push('📋 '+semGuia+' entrega(s) aguardam guia de transporte.');
+      alertEl.innerHTML=msgs.length?msgs.map(function(m){return '<div class="alert-banner danger">'+m+'</div>';}).join(''):'';
+    }
+    // Update sort arrows
+    ['refXD','cliente','entrega'].forEach(function(col){
+      var el=document.getElementById('sa-epend-'+col);
+      if(el){
+        var s=SORT_STATE['epend'];
+        if(s.col===col){ el.textContent=s.dir==='asc'?'↑':'↓'; el.style.color='var(--gold-m)'; }
+        else { el.textContent='⇅'; el.style.color='var(--border-s)'; }
+      }
+    });
+    document.getElementById('tb-epend').innerHTML=rows.length?rows.map(function(e){
       const cli=getCli(e.clienteId);
       const blocked=!e.pagConfirmado&&e.faturacao==='Pagar antes';
       return '<tr onclick="openDetail(\'enc\',\''+e.id+'\')" class="'+(blocked?'blocked-row':'')+'">'+
-        '<td class="mono">'+esc(e.refXD)+'</td><td><strong>'+esc(cli.nome)+'</strong></td>'+
-        '<td>'+badge(e.estado)+'</td><td>'+pagBadge(e.faturacao,e.pagConfirmado)+'</td>'+
+        '<td class="mono">'+esc(e.refXD)+'</td>'+
+        '<td><strong>'+esc(cli.nome)+'</strong><br><span style="font-size:11px;color:var(--text3);">'+esc(e.localidade||cli.regiao||'—')+'</span></td>'+
+        '<td>'+badge(e.estado)+'</td>'+
+        '<td>'+pagBadge(e.faturacao,e.pagConfirmado)+'</td>'+
         '<td>'+(e.pagConfirmado?badge('✓ Confirmado','b-green'):badge('Pendente','b-red'))+'</td>'+
-        '<td>'+(e.entregador?badge(e.entregador,'b-gray'):'—')+'</td>'+
+        '<td>'+(e.entregador?badge(e.entregador,'b-gray'):'<span style="color:var(--text3)">—</span>')+'</td>'+
         '<td>'+(e.guia?badge('✓ Feita','b-green'):badge('Em falta','b-amber'))+'</td>'+
+        '<td class="muted">'+fmtDate(e.entrega)+'</td>'+
         '<td class="muted" style="font-size:12px;">'+esc(e.morada||'—')+'</td></tr>';
-    }).join(''):'<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--text3);">Sem entregas activas</td></tr>';
+    }).join(''):'<tr><td colspan="9" style="padding:30px;text-align:center;color:var(--text3);">Sem entregas pendentes</td></tr>';
     return;
   }
 
